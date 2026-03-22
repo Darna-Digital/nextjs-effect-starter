@@ -1,6 +1,6 @@
 import { Effect, Layer } from "effect"
 import * as fs from "node:fs/promises"
-import { TodoRepo } from "./TodoRepo"
+import { TodoRepo, StorageError, TodoNotFound } from "./TodoRepo"
 import type { Todo, CreateTodo, TodoId, UpdateTodo } from "./Todo"
 
 // Layer = a recipe for constructing a service.
@@ -11,6 +11,8 @@ import type { Todo, CreateTodo, TodoId, UpdateTodo } from "./Todo"
 
 const DATA_PATH = "./data/todos.json"
 
+// Effect.tryPromise catches thrown errors and maps them into our typed StorageError.
+// The error is now tracked in the type signature — no silent swallowing.
 const readTodos = Effect.tryPromise({
   try: async () => {
     try {
@@ -20,7 +22,7 @@ const readTodos = Effect.tryPromise({
       return [] as Todo[]
     }
   },
-  catch: () => new Error("Failed to read todos"),
+  catch: (cause) => new StorageError({ cause }),
 })
 
 const writeTodos = (todos: Todo[]) =>
@@ -29,16 +31,19 @@ const writeTodos = (todos: Todo[]) =>
       await fs.mkdir("./data", { recursive: true })
       await fs.writeFile(DATA_PATH, JSON.stringify(todos, null, 2))
     },
-    catch: () => new Error("Failed to write todos"),
+    catch: (cause) => new StorageError({ cause }),
   })
 
-// Layer.succeed provides a ready-made value (no setup effects needed).
-// For async setup (DB connections, etc.), you'd use Layer.effect instead.
 export const JsonTodoRepo = Layer.succeed(TodoRepo, {
   getAll: readTodos,
 
   getById: (id: TodoId) =>
-    Effect.map(readTodos, (todos) => todos.find((t) => t.id === id) ?? null),
+    Effect.gen(function* () {
+      const todos = yield* readTodos
+      const todo = todos.find((t) => t.id === id)
+      if (!todo) return yield* new TodoNotFound({ id })
+      return todo
+    }),
 
   create: (input: CreateTodo) =>
     Effect.gen(function* () {
@@ -56,7 +61,7 @@ export const JsonTodoRepo = Layer.succeed(TodoRepo, {
     Effect.gen(function* () {
       const todos = yield* readTodos
       const index = todos.findIndex((t) => t.id === id)
-      if (index === -1) return null
+      if (index === -1) return yield* new TodoNotFound({ id })
       const existing = todos[index]
       const updated: Todo = {
         id: existing.id,
@@ -73,8 +78,7 @@ export const JsonTodoRepo = Layer.succeed(TodoRepo, {
     Effect.gen(function* () {
       const todos = yield* readTodos
       const filtered = todos.filter((t) => t.id !== id)
-      if (filtered.length === todos.length) return false
+      if (filtered.length === todos.length) return yield* new TodoNotFound({ id })
       yield* writeTodos(filtered)
-      return true
     }),
 })

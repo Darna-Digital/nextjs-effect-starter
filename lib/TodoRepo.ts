@@ -1,24 +1,37 @@
-import { Context, Effect } from "effect"
+import { Context, Data, Effect } from "effect"
 import type { Todo, TodoId, CreateTodo, UpdateTodo } from "./Todo"
 
-// This is the core Effect pattern for dependency injection.
+// --- Typed Errors ---
+// Data.TaggedError gives you:
+//   1. A _tag field for pattern matching (like a discriminated union)
+//   2. Automatic integration with Effect's error channel
+//   3. Nice toString / inspect output for free
 //
-// Context.Tag creates a "slot" that must be filled before the program runs.
-// The type system tracks which services are needed — if you forget to provide
-// one, you get a compile error, not a runtime crash.
-//
-// The Error type parameter (2nd generic in Effect<A, E, R>) lets each
-// implementation declare what can go wrong. Here we use `unknown` to stay flexible.
-//
-// To swap storage: create a different Layer that fills this same Tag.
+// The error type flows through the Effect<A, E, R> signature.
+// If you call repo.getById(), the compiler knows it can fail with
+// TodoNotFound | StorageError — you can't accidentally ignore either.
+
+export class TodoNotFound extends Data.TaggedError("TodoNotFound")<{
+  readonly id: TodoId
+}> {}
+
+export class StorageError extends Data.TaggedError("StorageError")<{
+  readonly cause: unknown
+}> {}
+
+// --- Service Interface ---
+// Now each method declares exactly what can go wrong.
+// getAll can fail with StorageError.
+// getById can fail with StorageError OR TodoNotFound.
+// This is the typed error channel — Effect's alternative to unchecked exceptions.
 
 export class TodoRepo extends Context.Tag("TodoRepo")<
   TodoRepo,
   {
-    readonly getAll: Effect.Effect<Todo[], unknown>
-    readonly getById: (id: TodoId) => Effect.Effect<Todo | null, unknown>
-    readonly create: (input: CreateTodo) => Effect.Effect<Todo, unknown>
-    readonly update: (id: TodoId, input: UpdateTodo) => Effect.Effect<Todo | null, unknown>
-    readonly remove: (id: TodoId) => Effect.Effect<boolean, unknown>
+    readonly getAll: Effect.Effect<Todo[], StorageError>
+    readonly getById: (id: TodoId) => Effect.Effect<Todo, TodoNotFound | StorageError>
+    readonly create: (input: CreateTodo) => Effect.Effect<Todo, StorageError>
+    readonly update: (id: TodoId, input: UpdateTodo) => Effect.Effect<Todo, TodoNotFound | StorageError>
+    readonly remove: (id: TodoId) => Effect.Effect<void, TodoNotFound | StorageError>
   }
 >() {}

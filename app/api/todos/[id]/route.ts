@@ -1,4 +1,4 @@
-import { Effect, Exit, Schema } from "effect"
+import { Effect, Schema } from "effect"
 import { TodoRepo } from "@/lib/TodoRepo"
 import { TodoId, UpdateTodo } from "@/lib/Todo"
 import { provideAndRun } from "@/lib/runEffect"
@@ -9,20 +9,16 @@ type RouteParams = { params: Promise<{ id: string }> }
 export async function GET(_request: Request, { params }: RouteParams) {
   const { id } = await params
 
-  const program = Effect.gen(function* () {
-    const repo = yield* TodoRepo
-    return yield* repo.getById(id as TodoId)
-  })
-
-  const exit = await provideAndRun(program)
-
-  if (Exit.isSuccess(exit)) {
-    if (exit.value === null) {
-      return Response.json({ error: "Not found" }, { status: 404 })
-    }
-    return Response.json(exit.value)
-  }
-  return Response.json({ error: "Server error" }, { status: 500 })
+  return provideAndRun(
+    Effect.gen(function* () {
+      const repo = yield* TodoRepo
+      // If the todo doesn't exist, this yields a TodoNotFound error.
+      // It short-circuits the generator (like a thrown exception)
+      // but it's tracked in the type — provideAndRun handles it.
+      const todo = yield* repo.getById(id as TodoId)
+      return Response.json(todo)
+    }),
+  )
 }
 
 // PUT /api/todos/:id
@@ -30,39 +26,25 @@ export async function PUT(request: Request, { params }: RouteParams) {
   const { id } = await params
   const body = await request.json()
 
-  const program = Effect.gen(function* () {
-    const input = yield* Schema.decode(UpdateTodo)(body)
-    const repo = yield* TodoRepo
-    return yield* repo.update(id as TodoId, input)
-  })
-
-  const exit = await provideAndRun(program)
-
-  if (Exit.isSuccess(exit)) {
-    if (exit.value === null) {
-      return Response.json({ error: "Not found" }, { status: 404 })
-    }
-    return Response.json(exit.value)
-  }
-  return Response.json({ error: "Invalid input" }, { status: 400 })
+  return provideAndRun(
+    Effect.gen(function* () {
+      const input = yield* Schema.decode(UpdateTodo)(body)
+      const repo = yield* TodoRepo
+      const todo = yield* repo.update(id as TodoId, input)
+      return Response.json(todo)
+    }),
+  )
 }
 
 // DELETE /api/todos/:id
 export async function DELETE(_request: Request, { params }: RouteParams) {
   const { id } = await params
 
-  const program = Effect.gen(function* () {
-    const repo = yield* TodoRepo
-    return yield* repo.remove(id as TodoId)
-  })
-
-  const exit = await provideAndRun(program)
-
-  if (Exit.isSuccess(exit)) {
-    if (!exit.value) {
-      return Response.json({ error: "Not found" }, { status: 404 })
-    }
-    return Response.json({ deleted: true })
-  }
-  return Response.json({ error: "Server error" }, { status: 500 })
+  return provideAndRun(
+    Effect.gen(function* () {
+      const repo = yield* TodoRepo
+      yield* repo.remove(id as TodoId)
+      return Response.json({ deleted: true })
+    }),
+  )
 }
