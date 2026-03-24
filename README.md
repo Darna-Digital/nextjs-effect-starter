@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# learning-effect
 
-## Getting Started
+Next.js app using [Effect-TS](https://effect.website) for typed errors, dependency injection, and composable business logic.
 
-First, run the development server:
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Dev
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+App runs at http://localhost:3000.
 
-## Learn More
+## Tests
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm test          # single run
+pnpm test:watch    # watch mode
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Features live in `features/` and follow the composable-functions pattern:
 
-## Deploy on Vercel
+```
+features/project/
+  entity/           # schemas, types, interfaces
+  functions/        # business logic, mocks, tests
+  adapters/         # wires real deps (JSON storage, tracing, error handling)
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Shared stuff like `StorageError` and the tracing config live in `lib/`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Tracing
+
+Local observability runs on Docker: OTEL Collector → Tempo → Grafana.
+
+### Start the stack
+
+```bash
+docker compose up -d
+```
+
+This gives you:
+
+| Service        | Port | What it does                  |
+|----------------|------|-------------------------------|
+| OTEL Collector | 4318 | Receives traces from the app  |
+| Tempo          | 3200 | Stores traces                 |
+| Grafana        | 3001 | UI for querying traces        |
+
+### View traces
+
+1. Start the app with `pnpm dev`
+2. Hit an endpoint — `curl http://localhost:3000/api/projects`
+3. Open http://localhost:3001
+4. Go to **Explore** → pick **Tempo** → **Search** → **Run query**
+
+Each request produces nested spans like:
+
+```
+GET /api/projects
+  └── Project.getAll
+```
+
+### How it works
+
+The app sends traces via Effect's `OtlpTracer` to the OTEL Collector on port 4318. The collector forwards them to Tempo, and Grafana queries Tempo to display them. All config lives in `infra/`.
+
+### Tear down
+
+```bash
+docker compose down
+```
+
+## API
+
+### Projects
+
+| Method | Endpoint              | Description      |
+|--------|-----------------------|------------------|
+| GET    | `/api/projects`       | List all         |
+| POST   | `/api/projects`       | Create (needs `{"title": "..."}`) |
+| GET    | `/api/projects/:id`   | Get by id        |
+| PUT    | `/api/projects/:id`   | Update           |
+| DELETE | `/api/projects/:id`   | Delete           |
+
+### Todos
+
+| Method | Endpoint           | Description      |
+|--------|--------------------|------------------|
+| GET    | `/api/todos`       | List all         |
+| POST   | `/api/todos`       | Create           |
+| GET    | `/api/todos/:id`   | Get by id        |
+| PUT    | `/api/todos/:id`   | Update           |
+| DELETE | `/api/todos/:id`   | Delete           |

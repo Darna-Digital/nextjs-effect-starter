@@ -17,7 +17,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     Effect.gen(function* () {
       const project = yield* projectFunctions.getById(id as ProjectId)
       return Response.json(project)
-    }),
+    }).pipe(Effect.withSpan("GET /api/projects/:id", { attributes: { id } })),
   )
 }
 
@@ -30,7 +30,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
       const input = yield* Schema.decode(UpdateProjectSchema)(body)
       const project = yield* projectFunctions.update(id as ProjectId, input)
       return Response.json(project)
-    }),
+    }).pipe(Effect.withSpan("PUT /api/projects/:id", { attributes: { id } })),
   )
 }
 
@@ -41,6 +41,8 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     Effect.gen(function* () {
       yield* projectFunctions.remove(id as ProjectId)
       return Response.json({ deleted: true })
-    }),
+    }).pipe(
+      Effect.withSpan("DELETE /api/projects/:id", { attributes: { id } }),
+    ),
   )
 }

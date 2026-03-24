@@ -3,6 +3,7 @@ import * as fs from "node:fs/promises"
 import type { ProjectDependencies } from "../entity/project.interfaces"
 import { ProjectNotFound } from "../entity/project.schema"
 import { StorageError } from "@/lib/errors"
+import { TracingLayer } from "@/lib/tracing"
 import { createProjectFunctions } from "../functions/project.functions"
 import type {
   Project,
@@ -116,5 +117,6 @@ export const provideAndRun = <A>(
           ),
         ),
     }),
+    Effect.provide(TracingLayer),
     Effect.runPromise,
   )

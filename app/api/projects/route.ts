@@ -10,7 +10,7 @@ export async function GET() {
     Effect.gen(function* () {
       const projects = yield* projectFunctions.getAll()
       return Response.json(projects)
-    }),
+    }).pipe(Effect.withSpan("GET /api/projects")),
   )
 }
 
@@ -22,6 +22,6 @@ export async function POST(request: Request) {
       const input = yield* Schema.decode(CreateProjectSchema)(body)
       const project = yield* projectFunctions.create(input)
       return Response.json(project, { status: 201 })
-    }),
+    }).pipe(Effect.withSpan("POST /api/projects")),
   )
 }
