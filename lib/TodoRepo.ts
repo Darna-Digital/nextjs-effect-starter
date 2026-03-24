@@ -1,22 +1,11 @@
 import { Context, Data, Effect } from "effect"
 import type { Todo, TodoId, CreateTodo, UpdateTodo } from "./Todo"
+import { StorageError } from "./errors"
 
-// --- Typed Errors ---
-// Data.TaggedError gives you:
-//   1. A _tag field for pattern matching (like a discriminated union)
-//   2. Automatic integration with Effect's error channel
-//   3. Nice toString / inspect output for free
-//
-// The error type flows through the Effect<A, E, R> signature.
-// If you call repo.getById(), the compiler knows it can fail with
-// TodoNotFound | StorageError — you can't accidentally ignore either.
+export { StorageError }
 
 export class TodoNotFound extends Data.TaggedError("TodoNotFound")<{
   readonly id: TodoId
-}> {}
-
-export class StorageError extends Data.TaggedError("StorageError")<{
-  readonly cause: unknown
 }> {}
 
 // --- Service Interface ---
