@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@darna-digital/composable-fetcher':
+        specifier: ^0.1.4
+        version: 0.1.4
       '@effect/opentelemetry':
         specifier: ^0.63.0
         version: 0.63.0(@effect/platform@0.96.0(effect@3.21.0))(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.6.1(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.214.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.6.1(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.6.1(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.6.1(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.6.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.40.0)(effect@3.21.0)
@@ -157,6 +160,10 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@darna-digital/composable-fetcher@0.1.4':
+    resolution: {integrity: sha512-nFjhFrmfdxczjE4MgV4DpvcGaL+tTW2r8qZoq9Ocvbsjlak1jQaPJ3emiX04ujlInHID55DemAHbiaDKPboVkw==}
+    engines: {node: '>=18'}
 
   '@effect/cluster@0.58.0':
     resolution: {integrity: sha512-0Zog7s7XdntWcTqdqWPoj6nc7hPaWIzp0k0DsFUWyCynXNPK9dAtgFrSce04NhddNqqbhtZck/lhuqJwNBrprQ==}
@@ -2683,6 +2690,8 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
+
+  '@darna-digital/composable-fetcher@0.1.4': {}
 
   '@effect/cluster@0.58.0(@effect/platform@0.96.0(effect@3.21.0))(@effect/rpc@0.75.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/sql@0.51.0(@effect/experimental@0.60.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/workflow@0.18.0(@effect/experimental@0.60.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/platform@0.96.0(effect@3.21.0))(@effect/rpc@0.75.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(effect@3.21.0))(effect@3.21.0)':
     dependencies:
