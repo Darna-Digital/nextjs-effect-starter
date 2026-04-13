@@ -31,44 +31,60 @@ export function OrganizationForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium">
+        <label
+          htmlFor="name"
+          className="block text-sm/6 font-medium text-gray-900 dark:text-gray-100"
+        >
           Name
         </label>
-        <input
-          id="name"
-          {...register("name")}
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-        />
+        <div className="mt-2">
+          <input
+            id="name"
+            placeholder="Acme Inc."
+            {...register("name")}
+            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500 sm:text-sm/6"
+          />
+        </div>
         {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+            {errors.name.message}
+          </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-sm font-medium">
+        <label
+          htmlFor="description"
+          className="block text-sm/6 font-medium text-gray-900 dark:text-gray-100"
+        >
           Description
         </label>
-        <input
-          id="description"
-          {...register("description")}
-          className="mt-1 block w-full rounded border border-gray-300 px-3 py-2"
-        />
+        <div className="mt-2">
+          <input
+            id="description"
+            placeholder="Optional description"
+            {...register("description")}
+            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500 sm:text-sm/6"
+          />
+        </div>
         {errors.description && (
-          <p className="mt-1 text-sm text-red-600">
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
             {errors.description.message}
           </p>
         )}
       </div>
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-      >
-        {isPending ? "Creating..." : "Create Organization"}
-      </button>
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
+        >
+          {isPending ? "Creating..." : "Create"}
+        </button>
+      </div>
     </form>
   )
 }

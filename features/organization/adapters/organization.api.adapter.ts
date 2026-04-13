@@ -1,22 +1,21 @@
-import { Effect } from "effect"
-import { createJsonPersistence } from "@/layers/persistance/persistence.json"
-import { EntityNotFound } from "@/layers/persistance/persistence.base"
-import type { OrganizationDependencies } from "../entity/organization.interfaces"
-import { OrganizationNotFound } from "../entity/organization.schema"
-import { StorageError } from "@/lib/errors"
-import { TracingLayer } from "@/lib/tracing"
-import { createOrganizationFunctions } from "../functions/organization.functions"
+import { Effect } from "effect";
+import { createJsonPersistence } from "@/layers/persistance/persistence.json";
+import { StorageError } from "@/layers/persistance/persistence.base";
+import type { OrganizationDependencies } from "../entity/organization.interfaces";
+import { OrganizationNotFound } from "../entity/organization.schema";
+import { TracingLayer } from "@/lib/tracing";
+import { createOrganizationFunctions } from "../functions/organization.functions";
 import type {
   Organization,
   OrganizationId,
   CreateOrganization,
   UpdateOrganization,
-} from "../entity/organization.schema"
-import type { ParseError } from "effect/ParseResult"
+} from "../entity/organization.schema";
+import type { ParseError } from "effect/ParseResult";
 
 const persistence = createJsonPersistence<Organization>(
   "./data/organizations.json",
-)
+);
 
 const dependencies: OrganizationDependencies = {
   data: {},
@@ -24,42 +23,54 @@ const dependencies: OrganizationDependencies = {
     getAll: () => persistence.getAll(),
 
     getById: (id: OrganizationId) =>
-      persistence.getById(id).pipe(
-        Effect.catchTag("EntityNotFound", (e) =>
-          Effect.fail(new OrganizationNotFound({ id: e.id as OrganizationId })),
+      persistence
+        .getById(id)
+        .pipe(
+          Effect.catchTag("EntityNotFound", (e) =>
+            Effect.fail(
+              new OrganizationNotFound({ id: e.id as OrganizationId }),
+            ),
+          ),
         ),
-      ),
 
     create: (input: CreateOrganization) => {
       const org: Organization = {
         id: crypto.randomUUID() as OrganizationId,
         name: input.name,
         description: input.description,
-      }
-      return persistence.create(org)
+      };
+      return persistence.create(org);
     },
 
     update: (id: OrganizationId, input: UpdateOrganization) =>
-      persistence.update(id, input).pipe(
-        Effect.catchTag("EntityNotFound", (e) =>
-          Effect.fail(new OrganizationNotFound({ id: e.id as OrganizationId })),
+      persistence
+        .update(id, input)
+        .pipe(
+          Effect.catchTag("EntityNotFound", (e) =>
+            Effect.fail(
+              new OrganizationNotFound({ id: e.id as OrganizationId }),
+            ),
+          ),
         ),
-      ),
 
     remove: (id: OrganizationId) =>
-      persistence.remove(id).pipe(
-        Effect.catchTag("EntityNotFound", (e) =>
-          Effect.fail(new OrganizationNotFound({ id: e.id as OrganizationId })),
+      persistence
+        .remove(id)
+        .pipe(
+          Effect.catchTag("EntityNotFound", (e) =>
+            Effect.fail(
+              new OrganizationNotFound({ id: e.id as OrganizationId }),
+            ),
+          ),
         ),
-      ),
   },
-}
+};
 
-const organizationFunctions = createOrganizationFunctions(dependencies)
+const organizationFunctions = createOrganizationFunctions(dependencies);
 
-export { organizationFunctions }
+export { organizationFunctions };
 
-type OrganizationError = StorageError | OrganizationNotFound | ParseError
+type OrganizationError = StorageError | OrganizationNotFound | ParseError;
 
 export const provideAndRun = <A>(
   effect: Effect.Effect<A, OrganizationError>,
@@ -87,4 +98,4 @@ export const provideAndRun = <A>(
     }),
     Effect.provide(TracingLayer),
     Effect.runPromise,
-  )
+  );
