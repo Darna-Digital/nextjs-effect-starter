@@ -6,7 +6,7 @@ import type {
 } from "../../entity/organization.schema"
 
 interface OrganizationListProps {
-  organizations: Organization[]
+  organizations: readonly Organization[]
   onDelete?: (id: OrganizationId) => void
 }
 
