@@ -3,7 +3,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Schema as S } from "effect"
 import { composableFetcher } from "@darna-digital/composable-fetcher"
-import { toStandardSchema } from "@/lib/form/effect-standard-schema"
 import {
   OrganizationSchema,
   CreateOrganizationSchema,
@@ -15,11 +14,11 @@ import {
 
 const QUERY_KEY = ["organizations"] as const
 
-const organizationListSchema = toStandardSchema(S.Array(OrganizationSchema))
-const organizationSchema = toStandardSchema(OrganizationSchema)
-const createOrganizationSchema = toStandardSchema(CreateOrganizationSchema)
-const updateOrganizationSchema = toStandardSchema(UpdateOrganizationSchema)
-const deletedSchema = toStandardSchema(S.Struct({ deleted: S.Boolean }))
+const organizationListSchema = S.standardSchemaV1(S.Array(OrganizationSchema))
+const organizationSchema = S.standardSchemaV1(OrganizationSchema)
+const createOrganizationSchema = S.standardSchemaV1(CreateOrganizationSchema)
+const updateOrganizationSchema = S.standardSchemaV1(UpdateOrganizationSchema)
+const deletedSchema = S.standardSchemaV1(S.Struct({ deleted: S.Boolean }))
 
 export function useOrganizations() {
   return useQuery({
