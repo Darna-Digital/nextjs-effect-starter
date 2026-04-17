@@ -6,6 +6,7 @@ import {
   useOrganizations,
   useCreateOrganization,
   useDeleteOrganization,
+  parseOrganizationError,
 } from "@/features/organization/presentation/hooks/use-organizations"
 
 export default function OrganizationsPage() {
@@ -31,8 +32,9 @@ export default function OrganizationsPage() {
           </h2>
           <div className="mt-4">
             <OrganizationForm
-              onSubmit={(data) => createMutation.mutate(data)}
+              onSubmit={(data) => createMutation.mutateAsync(data)}
               isPending={createMutation.isPending}
+              submitError={parseOrganizationError(createMutation.error)}
             />
           </div>
         </section>

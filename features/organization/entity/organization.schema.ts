@@ -42,3 +42,17 @@ export class OrganizationNameReserved extends Data.TaggedError(
 )<{
   readonly name: string
 }> {}
+
+/**
+ * Shape of error bodies returned by the organization API.
+ * Used on the client via composable-fetcher's `errorSchema` so the frontend
+ * sees a typed, discriminated union instead of an untyped JSON blob.
+ */
+export const OrganizationApiErrorSchema = S.Union(
+  S.Struct({ error: S.Literal("Name already taken"), name: S.String }),
+  S.Struct({ error: S.Literal("Name is reserved"), name: S.String }),
+  S.Struct({ error: S.Literal("Not found"), id: S.String }),
+  S.Struct({ error: S.Literal("Validation failed"), details: S.String }),
+  S.Struct({ error: S.Literal("Storage error"), cause: S.String }),
+)
+export type OrganizationApiError = typeof OrganizationApiErrorSchema.Type

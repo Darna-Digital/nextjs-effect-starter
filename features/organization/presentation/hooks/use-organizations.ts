@@ -1,12 +1,17 @@
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Schema as S } from "effect"
-import { composableFetcher } from "@darna-digital/composable-fetcher"
+import { Match, Schema as S } from "effect"
+import {
+  composableFetcher,
+  getFetchError,
+} from "@darna-digital/composable-fetcher"
 import {
   OrganizationSchema,
   CreateOrganizationSchema,
   UpdateOrganizationSchema,
+  OrganizationApiErrorSchema,
+  type OrganizationApiError,
   type OrganizationId,
   type CreateOrganization,
   type UpdateOrganization,
@@ -19,6 +24,9 @@ const organizationSchema = S.standardSchemaV1(OrganizationSchema)
 const createOrganizationSchema = S.standardSchemaV1(CreateOrganizationSchema)
 const updateOrganizationSchema = S.standardSchemaV1(UpdateOrganizationSchema)
 const deletedSchema = S.standardSchemaV1(S.Struct({ deleted: S.Boolean }))
+const organizationApiErrorSchema = S.standardSchemaV1(
+  OrganizationApiErrorSchema,
+)
 
 export function useOrganizations() {
   return useQuery({
@@ -38,6 +46,7 @@ export function useOrganization(id: OrganizationId) {
       composableFetcher
         .url(`/api/organizations/${id}`)
         .schema(organizationSchema)
+        .errorSchema(organizationApiErrorSchema)
         .run("GET"),
   })
 }
@@ -51,6 +60,7 @@ export function useCreateOrganization() {
         .url("/api/organizations")
         .input(createOrganizationSchema)
         .schema(organizationSchema)
+        .errorSchema(organizationApiErrorSchema)
         .body(input)
         .run("POST"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
@@ -72,6 +82,7 @@ export function useUpdateOrganization() {
         .url(`/api/organizations/${id}`)
         .input(updateOrganizationSchema)
         .schema(organizationSchema)
+        .errorSchema(organizationApiErrorSchema)
         .body(input)
         .run("PUT"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
@@ -86,7 +97,64 @@ export function useDeleteOrganization() {
       composableFetcher
         .url(`/api/organizations/${id}`)
         .schema(deletedSchema)
+        .errorSchema(organizationApiErrorSchema)
         .run("DELETE"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
   })
+}
+
+/**
+ * Classifies an error thrown by an organization mutation/query into
+ * something the form can render directly:
+ *  - `field: "name"` → message belongs under the name input
+ *  - `field: null`   → show as a general banner
+ */
+export type OrganizationFieldError = {
+  field: "name" | null
+  message: string
+}
+
+/**
+ * Exhaustive match over the API error union. Adding a new member to
+ * `OrganizationApiErrorSchema` without handling it here is a type error.
+ */
+const matchApiError = Match.type<OrganizationApiError>().pipe(
+  Match.discriminator("error")("Name already taken", (e) => ({
+    field: "name" as const,
+    message: `"${e.name}" is already taken.`,
+  })),
+  Match.discriminator("error")("Name is reserved", (e) => ({
+    field: "name" as const,
+    message: `"${e.name}" is a reserved name.`,
+  })),
+  Match.discriminator("error")("Validation failed", () => ({
+    field: "name" as const,
+    message: "Please check the form fields.",
+  })),
+  Match.discriminator("error")("Not found", () => ({
+    field: null,
+    message: "Organization not found.",
+  })),
+  Match.discriminator("error")("Storage error", () => ({
+    field: null,
+    message: "Something went wrong on our side. Please try again.",
+  })),
+  Match.exhaustive,
+)
+
+export function parseOrganizationError(
+  error: unknown,
+): OrganizationFieldError | null {
+  if (!error) return null
+
+  const fe = getFetchError<OrganizationApiError>(error)
+  if (!fe) return { field: null, message: String(error) }
+
+  if (fe.type === "http" && fe.data) return matchApiError(fe.data)
+
+  if (fe.type === "network") {
+    return { field: null, message: "Network error. Check your connection." }
+  }
+
+  return { field: null, message: fe.message }
 }
