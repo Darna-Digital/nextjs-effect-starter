@@ -1,6 +1,6 @@
-import { Data, Effect, Schema } from "effect"
+import { Data, Effect, ManagedRuntime, Schema } from "effect"
 import { ParseError } from "effect/ParseResult"
-import { TracingLayer } from "@/lib/tracing"
+import { AppRuntime } from "@/lib/runtime"
 
 /**
  * Contract for errors that render themselves as HTTP responses.
@@ -26,17 +26,20 @@ type InferSchema<S> = S extends Schema.Schema<infer A, infer _I, never>
   ? A
   : undefined
 
+/** Context the handler may freely depend on — anything the AppRuntime supplies. */
+type AppContext = ManagedRuntime.ManagedRuntime.Context<typeof AppRuntime>
+
 type RouteHandler<Body, Params, E, A> = (ctx: {
   body: Body
   params: Params
-}) => Effect.Effect<A, E>
+}) => Effect.Effect<A, E, AppContext>
 
 type NextRouteContext = { params: Promise<Record<string, string>> }
 
 /**
  * Declarative Next.js route handler. Decodes `params` and `body` at the
- * edge via Effect Schema, runs the `handle` effect, and renders any
- * `RenderableError` (or `ParseError`) to its HTTP response.
+ * edge via Effect Schema, runs `handle` through the app runtime, and
+ * renders any `RenderableError` (or `ParseError`) to its HTTP response.
  *
  * OTel span attributes follow HTTP semantic conventions
  * (`http.request.method`, `http.route`). The span is marked ERROR
@@ -89,9 +92,10 @@ export function apiRoute<
         params: params as InferSchema<ParamsSchema>,
       })
 
-      yield* Effect.annotateCurrentSpan({
-        "http.response.status_code": status,
-      })
+      yield* Effect.annotateCurrentSpan(
+        "http.response.status_code",
+        status,
+      )
 
       return status === 204
         ? new Response(null, { status: 204 })
@@ -120,10 +124,9 @@ export function apiRoute<
           )
         }),
       ),
-      Effect.provide(TracingLayer),
     )
 
-    return Effect.runPromise(program)
+    return AppRuntime.runPromise(program)
   }
 }
 
