@@ -15,7 +15,7 @@ import {
   type OrganizationId,
   type CreateOrganization,
   type UpdateOrganization,
-} from "../../entity/organization.schema"
+} from "../../organization.schema"
 
 const QUERY_KEY = ["organizations"] as const
 

@@ -11,7 +11,7 @@ import {
   type Organization,
   type OrganizationId,
   type UpdateOrganization,
-} from "./entity/organization.schema"
+} from "./organization.schema"
 
 /**
  * Storage backend. Swap the Layer (JSON ↔ memory ↔ Postgres) without
@@ -25,7 +25,7 @@ export class OrganizationStorage extends Context.Tag("OrganizationStorage")<
 /** Names the product refuses at creation time. Injected for test configurability. */
 export class ReservedOrganizationNames extends Context.Tag(
   "ReservedOrganizationNames",
-)<ReservedOrganizationNames, ReadonlySet<string>>() {}
+)<ReservedOrganizationNames, readonly string[]>() {}
 
 /**
  * The organization service. Call sites read Rails-style:
@@ -45,7 +45,7 @@ export class Organizations extends Effect.Service<Organizations>()(
       const reserved = yield* ReservedOrganizationNames
 
       const assertNotReserved = (name: string) =>
-        reserved.has(name.toLowerCase())
+        reserved.includes(name.toLowerCase())
           ? Effect.fail(new OrganizationNameReserved({ name }))
           : Effect.void
 

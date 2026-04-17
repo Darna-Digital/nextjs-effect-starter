@@ -1,6 +1,6 @@
 import { Layer } from "effect"
 import { createJsonPersistence } from "@/layers/persistance/persistence.json"
-import type { Organization } from "./entity/organization.schema"
+import type { Organization } from "./organization.schema"
 import {
   Organizations,
   OrganizationStorage,
@@ -15,10 +15,11 @@ export const OrganizationsLive = Organizations.Default.pipe(
         OrganizationStorage,
         createJsonPersistence<Organization>("./data/organizations.json"),
       ),
-      Layer.succeed(
-        ReservedOrganizationNames,
-        new Set(["admin", "system", "root"]),
-      ),
+      Layer.succeed(ReservedOrganizationNames, [
+        "admin",
+        "system",
+        "root",
+      ]),
     ),
   ),
 )

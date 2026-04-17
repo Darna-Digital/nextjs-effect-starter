@@ -1,6 +1,6 @@
 import { Layer } from "effect"
 import { createMemoryPersistence } from "@/layers/persistance/persistence.memory"
-import type { Organization } from "./entity/organization.schema"
+import type { Organization } from "./organization.schema"
 import {
   Organizations,
   OrganizationStorage,
@@ -9,22 +9,28 @@ import {
 
 /**
  * In-memory Layer — backs `Organizations` with a fresh `Ref`-based store.
- * Used by tests and any dev seeding. Provide it to an effect:
+ * Used by tests and any dev seeding.
  *
- *     program.pipe(Effect.provide(OrganizationsMemory([seed])))
+ *     OrganizationsMemory()
+ *     OrganizationsMemory({ seed: [orgA] })
+ *     OrganizationsMemory({ reserved: ["admin"] })
+ *     OrganizationsMemory({ seed: [orgA], reserved: ["admin"] })
  */
-export const OrganizationsMemory = (
-  seed: Organization[] = [],
-  reservedNames: ReadonlySet<string> = new Set(),
-) =>
+export const OrganizationsMemory = ({
+  seed = [],
+  reserved = [],
+}: {
+  seed?: readonly Organization[]
+  reserved?: readonly string[]
+} = {}) =>
   Organizations.Default.pipe(
     Layer.provide(
       Layer.mergeAll(
         Layer.effect(
           OrganizationStorage,
-          createMemoryPersistence<Organization>(seed),
+          createMemoryPersistence<Organization>([...seed]),
         ),
-        Layer.succeed(ReservedOrganizationNames, reservedNames),
+        Layer.succeed(ReservedOrganizationNames, reserved),
       ),
     ),
   )

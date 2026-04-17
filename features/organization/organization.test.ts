@@ -5,19 +5,18 @@ import { OrganizationsMemory } from "./memory"
 import type {
   Organization,
   OrganizationId,
-} from "./entity/organization.schema"
+} from "./organization.schema"
 
 /** Run a program with a fresh in-memory org service, return Either. */
 const run = <A, E>(
   effect: Effect.Effect<A, E, Organizations>,
-  seed: Organization[] = [],
-  reserved: ReadonlySet<string> = new Set(),
+  options?: {
+    seed?: readonly Organization[]
+    reserved?: readonly string[]
+  },
 ) =>
   Effect.runPromise(
-    effect.pipe(
-      Effect.either,
-      Effect.provide(OrganizationsMemory(seed, reserved)),
-    ),
+    effect.pipe(Effect.either, Effect.provide(OrganizationsMemory(options))),
   )
 
 const orgA: Organization = {
@@ -28,25 +27,27 @@ const orgA: Organization = {
 
 describe("Organizations.create", () => {
   it("rejects a reserved name", async () => {
-    const result = await run(
-      Organizations.create({ name: "Admin" }),
-      [],
-      new Set(["admin"]),
-    )
+    const result = await run(Organizations.create({ name: "Admin" }), {
+      reserved: ["admin"],
+    })
     expect(Either.isLeft(result)).toBe(true)
     if (Either.isLeft(result))
       expect(result.left._tag).toBe("OrganizationNameReserved")
   })
 
   it("rejects a duplicate name regardless of case", async () => {
-    const result = await run(Organizations.create({ name: "acme" }), [orgA])
+    const result = await run(Organizations.create({ name: "acme" }), {
+      seed: [orgA],
+    })
     expect(Either.isLeft(result)).toBe(true)
     if (Either.isLeft(result))
       expect(result.left._tag).toBe("OrganizationNameTaken")
   })
 
   it("allows a fresh unique name", async () => {
-    const result = await run(Organizations.create({ name: "Globex" }), [orgA])
+    const result = await run(Organizations.create({ name: "Globex" }), {
+      seed: [orgA],
+    })
     expect(Either.isRight(result)).toBe(true)
     if (Either.isRight(result)) expect(result.right.name).toBe("Globex")
   })
@@ -56,8 +57,7 @@ describe("Organizations.update", () => {
   it("rejects renaming to a reserved name", async () => {
     const result = await run(
       Organizations.update(orgA.id, { name: "System" }),
-      [orgA],
-      new Set(["system"]),
+      { seed: [orgA], reserved: ["system"] },
     )
     expect(Either.isLeft(result)).toBe(true)
     if (Either.isLeft(result))
@@ -71,7 +71,7 @@ describe("Organizations.update", () => {
     }
     const result = await run(
       Organizations.update(orgB.id, { name: "acme" }),
-      [orgA, orgB],
+      { seed: [orgA, orgB] },
     )
     expect(Either.isLeft(result)).toBe(true)
     if (Either.isLeft(result))
@@ -84,7 +84,7 @@ describe("Organizations.update", () => {
         name: "Acme",
         description: "renamed desc",
       }),
-      [orgA],
+      { seed: [orgA] },
     )
     expect(Either.isRight(result)).toBe(true)
     if (Either.isRight(result)) {
@@ -96,7 +96,7 @@ describe("Organizations.update", () => {
   it("allows updates that don't touch the name", async () => {
     const result = await run(
       Organizations.update(orgA.id, { description: "updated" }),
-      [orgA],
+      { seed: [orgA] },
     )
     expect(Either.isRight(result)).toBe(true)
     if (Either.isRight(result)) {

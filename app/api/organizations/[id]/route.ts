@@ -3,7 +3,7 @@ import { apiRoute } from "@/lib/http/api-route"
 import {
   OrganizationId,
   UpdateOrganizationSchema,
-} from "@/features/organization/entity/organization.schema"
+} from "@/features/organization/organization.schema"
 import { Organizations } from "@/features/organization/organization"
 
 const Params = S.Struct({ id: OrganizationId })
