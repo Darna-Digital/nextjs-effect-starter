@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Effect, Either, Layer } from "effect";
-import { Projects } from "./project";
+import { Projects } from "./project.service";
 import { ProjectsMemory } from "./project.layers.memory";
 import { OrganizationsMemory } from "@/features/organization/organization.layers.memory";
 import { Organizations } from "@/features/organization/organization.service";
