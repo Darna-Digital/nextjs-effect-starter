@@ -1,6 +1,6 @@
 import { apiRoute } from "@/lib/http/api-route"
 import { CreateOrganizationSchema } from "@/features/organization/entity/organization.schema"
-import { Organizations } from "@/features/organization/service"
+import { Organizations } from "@/features/organization/organization"
 
 export const GET = apiRoute({
   span: "GET /api/organizations",

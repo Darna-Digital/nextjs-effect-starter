@@ -5,7 +5,7 @@ import {
   Organizations,
   OrganizationStorage,
   ReservedOrganizationNames,
-} from "./service"
+} from "./organization"
 
 /** Layer that provides `Organizations` backed by the JSON file store. */
 export const OrganizationsLive = Organizations.Default.pipe(

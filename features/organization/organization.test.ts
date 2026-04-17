@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { Effect, Either } from "effect"
-import { Organizations } from "./service"
-import { OrganizationsTest } from "./test-layer"
+import { Organizations } from "./organization"
+import { OrganizationsMemory } from "./memory"
 import type {
   Organization,
   OrganizationId,
@@ -16,7 +16,7 @@ const run = <A, E>(
   Effect.runPromise(
     effect.pipe(
       Effect.either,
-      Effect.provide(OrganizationsTest(seed, reserved)),
+      Effect.provide(OrganizationsMemory(seed, reserved)),
     ),
   )
 

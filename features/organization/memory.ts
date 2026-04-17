@@ -5,15 +5,15 @@ import {
   Organizations,
   OrganizationStorage,
   ReservedOrganizationNames,
-} from "./service"
+} from "./organization"
 
 /**
- * Test Layer — in-memory store, configurable reserved names.
- * Provide it to any Effect that depends on `Organizations`:
+ * In-memory Layer — backs `Organizations` with a fresh `Ref`-based store.
+ * Used by tests and any dev seeding. Provide it to an effect:
  *
- *     program.pipe(Effect.provide(OrganizationsTest([seed])))
+ *     program.pipe(Effect.provide(OrganizationsMemory([seed])))
  */
-export const OrganizationsTest = (
+export const OrganizationsMemory = (
   seed: Organization[] = [],
   reservedNames: ReadonlySet<string> = new Set(),
 ) =>

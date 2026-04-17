@@ -4,7 +4,7 @@ import {
   OrganizationId,
   UpdateOrganizationSchema,
 } from "@/features/organization/entity/organization.schema"
-import { Organizations } from "@/features/organization/service"
+import { Organizations } from "@/features/organization/organization"
 
 const Params = S.Struct({ id: OrganizationId })
 
