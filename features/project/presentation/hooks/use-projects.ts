@@ -1,0 +1,142 @@
+"use client"
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Match, Schema as S } from "effect"
+import {
+  composableFetcher,
+  getFetchError,
+} from "@darna-digital/composable-fetcher"
+import {
+  ProjectSchema,
+  CreateProjectSchema,
+  UpdateProjectSchema,
+  type ProjectId,
+  type CreateProject,
+  type UpdateProject,
+} from "../../project.schema"
+
+const QUERY_KEY = ["projects"] as const
+
+const projectListSchema = S.standardSchemaV1(S.Array(ProjectSchema))
+const projectSchema = S.standardSchemaV1(ProjectSchema)
+const createProjectSchema = S.standardSchemaV1(CreateProjectSchema)
+const updateProjectSchema = S.standardSchemaV1(UpdateProjectSchema)
+
+/**
+ * Shape of error bodies the project API can return. `"Not found"` covers
+ * both `ProjectNotFound` *and* `OrganizationNotFound` — the backend uses
+ * the same string because the frontend renders them the same way.
+ */
+const ProjectApiErrorSchema = S.Union(
+  S.Struct({ error: S.Literal("Not found"), id: S.String }),
+  S.Struct({ error: S.Literal("Validation failed"), details: S.String }),
+  S.Struct({ error: S.Literal("Storage error"), cause: S.String }),
+)
+type ProjectApiError = typeof ProjectApiErrorSchema.Type
+const projectApiErrorSchema = S.standardSchemaV1(ProjectApiErrorSchema)
+
+export function useProjects() {
+  return useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: () =>
+      composableFetcher
+        .url("/api/projects")
+        .schema(projectListSchema)
+        .run("GET"),
+  })
+}
+
+export function useProject(id: ProjectId) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, id],
+    queryFn: () =>
+      composableFetcher
+        .url(`/api/projects/${id}`)
+        .schema(projectSchema)
+        .errorSchema(projectApiErrorSchema)
+        .run("GET"),
+  })
+}
+
+export function useCreateProject() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: CreateProject) =>
+      composableFetcher
+        .url("/api/projects")
+        .input(createProjectSchema)
+        .schema(projectSchema)
+        .errorSchema(projectApiErrorSchema)
+        .body(input)
+        .run("POST"),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  })
+}
+
+export function useUpdateProject() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, input }: { id: ProjectId; input: UpdateProject }) =>
+      composableFetcher
+        .url(`/api/projects/${id}`)
+        .input(updateProjectSchema)
+        .schema(projectSchema)
+        .errorSchema(projectApiErrorSchema)
+        .body(input)
+        .run("PUT"),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  })
+}
+
+export function useDeleteProject() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: ProjectId) =>
+      composableFetcher
+        .url(`/api/projects/${id}`)
+        .errorSchema(projectApiErrorSchema)
+        .run("DELETE"),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  })
+}
+
+export type ProjectFormError = {
+  field: "organizationId" | null
+  message: string
+}
+
+const matchApiError = Match.type<ProjectApiError>().pipe(
+  Match.discriminator("error")("Not found", (e) => ({
+    field: "organizationId" as const,
+    message: `The selected organization (${e.id}) could not be found.`,
+  })),
+  Match.discriminator("error")("Validation failed", () => ({
+    field: null,
+    message: "Please check the form fields.",
+  })),
+  Match.discriminator("error")("Storage error", () => ({
+    field: null,
+    message: "Something went wrong on our side. Please try again.",
+  })),
+  Match.exhaustive,
+)
+
+export function parseProjectError(
+  error: unknown,
+): ProjectFormError | null {
+  if (!error) return null
+
+  const fe = getFetchError<ProjectApiError>(error)
+  if (!fe) return { field: null, message: String(error) }
+
+  if (fe.type === "http" && fe.data) return matchApiError(fe.data)
+
+  if (fe.type === "network") {
+    return { field: null, message: "Network error. Check your connection." }
+  }
+
+  return { field: null, message: fe.message }
+}

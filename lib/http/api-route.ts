@@ -1,6 +1,7 @@
 import { Data, Effect, ManagedRuntime, Schema } from "effect"
 import { ParseError } from "effect/ParseResult"
 import { AppRuntime } from "@/lib/runtime"
+import { CurrentUser, type User } from "@/lib/auth"
 
 /**
  * Contract for errors that render themselves as HTTP responses.
@@ -26,24 +27,32 @@ type InferSchema<S> = S extends Schema.Schema<infer A, infer _I, never>
   ? A
   : undefined
 
-/** Context the handler may freely depend on — anything the AppRuntime supplies. */
-type AppContext = ManagedRuntime.ManagedRuntime.Context<typeof AppRuntime>
+/** What a route handler may freely depend on: app-wide services + the current user. */
+type RequestContext =
+  | ManagedRuntime.ManagedRuntime.Context<typeof AppRuntime>
+  | CurrentUser
 
 type RouteHandler<Body, Params, E, A> = (ctx: {
   body: Body
   params: Params
-}) => Effect.Effect<A, E, AppContext>
+}) => Effect.Effect<A, E, RequestContext>
 
 type NextRouteContext = { params: Promise<Record<string, string>> }
 
 /**
+ * Stub auth — read `X-User-Id` header, otherwise fall back to an anonymous
+ * demo user. Real deployments would parse a signed session / JWT.
+ */
+const userFromRequest = (request: Request): User => {
+  const id = request.headers.get("x-user-id") ?? "anonymous"
+  return { id, email: `${id}@demo.local` }
+}
+
+/**
  * Declarative Next.js route handler. Decodes `params` and `body` at the
- * edge via Effect Schema, runs `handle` through the app runtime, and
- * renders any `RenderableError` (or `ParseError`) to its HTTP response.
- *
- * OTel span attributes follow HTTP semantic conventions
- * (`http.request.method`, `http.route`). The span is marked ERROR
- * automatically on failure; success annotates `http.response.status_code`.
+ * edge via Effect Schema, binds the current user for the request,
+ * runs `handle` through the app runtime, and renders any
+ * `RenderableError` (or `ParseError`) to its HTTP response.
  *
  * `status: 204` emits an empty-body response regardless of handler return.
  */
@@ -72,6 +81,7 @@ export function apiRoute<
   ): Promise<Response> => {
     const url = new URL(request.url)
     const rawParams = (await context?.params) ?? {}
+    const user = userFromRequest(request)
 
     const program = Effect.gen(function* () {
       const params = config.params
@@ -105,8 +115,10 @@ export function apiRoute<
         attributes: {
           "http.request.method": request.method,
           "http.route": url.pathname,
+          "user.id": user.id,
         },
       }),
+      Effect.provideService(CurrentUser, user),
       Effect.catchAll((error) =>
         Effect.sync(() => {
           if (error instanceof ParseError) {
