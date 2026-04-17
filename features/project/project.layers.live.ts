@@ -1,5 +1,5 @@
 import { Layer } from "effect";
-import { createJsonPersistence } from "@/layers/persistance/persistence.json";
+import { jsonStorage } from "@/layers/storage/storage.json";
 import type { Project } from "./project.schema";
 import { ProjectStorage, Projects } from "./project.service";
 
@@ -8,7 +8,7 @@ export const ProjectsLive = Projects.Default.pipe(
   Layer.provide(
     Layer.succeed(
       ProjectStorage,
-      createJsonPersistence<Project>("./data/projects.json"),
+      jsonStorage<Project>("./data/projects.json"),
     ),
   ),
 );

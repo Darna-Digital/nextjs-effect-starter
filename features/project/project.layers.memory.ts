@@ -1,5 +1,5 @@
 import { Layer } from "effect";
-import { createMemoryPersistence } from "@/layers/persistance/persistence.memory";
+import { memoryStorage } from "@/layers/storage/storage.memory";
 import type { Project } from "./project.schema";
 import { ProjectStorage, Projects } from "./project.service";
 
@@ -14,6 +14,6 @@ export const ProjectsMemory = ({
 }: { seed?: readonly Project[] } = {}) =>
   Projects.Default.pipe(
     Layer.provide(
-      Layer.effect(ProjectStorage, createMemoryPersistence<Project>([...seed])),
+      Layer.effect(ProjectStorage, memoryStorage<Project>([...seed])),
     ),
   );

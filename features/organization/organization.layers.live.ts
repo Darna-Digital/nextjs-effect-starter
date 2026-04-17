@@ -1,5 +1,5 @@
 import { Layer } from "effect";
-import { createJsonPersistence } from "@/layers/persistance/persistence.json";
+import { jsonStorage } from "@/layers/storage/storage.json";
 import type { Organization } from "./organization.schema";
 import {
   Organizations,
@@ -13,7 +13,7 @@ export const OrganizationsLive = Organizations.Default.pipe(
     Layer.mergeAll(
       Layer.succeed(
         OrganizationStorage,
-        createJsonPersistence<Organization>("./data/organizations.json"),
+        jsonStorage<Organization>("./data/organizations.json"),
       ),
       Layer.succeed(ReservedOrganizationNames, ["admin", "system", "root"]),
     ),

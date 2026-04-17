@@ -1,8 +1,8 @@
 import { Context, Effect } from "effect"
 import {
-  mapEntityNotFound,
-  type PersistenceLayer,
-} from "@/layers/persistance/persistence.base"
+  mapNotFound,
+  type Storage,
+} from "@/layers/storage/storage"
 import {
   OrganizationNotFound,
   OrganizationNameReserved,
@@ -19,7 +19,7 @@ import {
  */
 export class OrganizationStorage extends Context.Tag("OrganizationStorage")<
   OrganizationStorage,
-  PersistenceLayer<Organization>
+  Storage<Organization>
 >() {}
 
 /** Names the product refuses at creation time. Injected for test configurability. */
@@ -64,7 +64,7 @@ export class Organizations extends Effect.Service<Organizations>()(
             return yield* Effect.fail(new OrganizationNameTaken({ name }))
         })
 
-      const toNotFound = mapEntityNotFound(
+      const toNotFound = mapNotFound(
         (id: OrganizationId) => new OrganizationNotFound({ id }),
       )
 

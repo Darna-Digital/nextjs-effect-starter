@@ -1,5 +1,5 @@
 import { Layer } from "effect";
-import { createMemoryPersistence } from "@/layers/persistance/persistence.memory";
+import { memoryStorage } from "@/layers/storage/storage.memory";
 import type { Organization } from "./organization.schema";
 import {
   Organizations,
@@ -28,7 +28,7 @@ export const OrganizationsMemory = ({
       Layer.mergeAll(
         Layer.effect(
           OrganizationStorage,
-          createMemoryPersistence<Organization>([...seed]),
+          memoryStorage<Organization>([...seed]),
         ),
         Layer.succeed(ReservedOrganizationNames, reserved),
       ),

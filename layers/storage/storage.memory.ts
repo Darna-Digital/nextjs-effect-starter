@@ -1,10 +1,13 @@
 import { Effect, Ref } from "effect"
-import type { PersistenceLayer } from "./persistence.base"
-import { EntityNotFound } from "./persistence.base"
+import { EntityNotFound, type Storage } from "./storage"
 
-export const createMemoryPersistence = <T extends { id: string }>(
+/**
+ * In-memory `Storage<T>` backed by a `Ref`. Used by tests and dev seeding.
+ * Each call returns a fresh, isolated store — no shared state between tests.
+ */
+export const memoryStorage = <T extends { id: string }>(
   initial: T[] = [],
-): Effect.Effect<PersistenceLayer<T>> =>
+): Effect.Effect<Storage<T>> =>
   Effect.gen(function* () {
     const store = yield* Ref.make<T[]>(initial)
 
@@ -20,17 +23,16 @@ export const createMemoryPersistence = <T extends { id: string }>(
         }),
 
       create: (item) =>
-        Effect.gen(function* () {
-          yield* Ref.update(store, (items) => [...items, item])
-          return item
-        }),
+        Ref.update(store, (items) => [...items, item]).pipe(
+          Effect.as(item),
+        ),
 
-      update: (id, partial) =>
+      update: (id, patch) =>
         Effect.gen(function* () {
           const items = yield* Ref.get(store)
           const index = items.findIndex((i) => i.id === id)
           if (index === -1) return yield* Effect.fail(new EntityNotFound(id))
-          const updated = { ...items[index], ...partial } as T
+          const updated = { ...items[index], ...patch } as T
           yield* Ref.update(store, (current) => {
             const next = [...current]
             next[index] = updated

@@ -1,8 +1,8 @@
 import { Context, Effect } from "effect";
 import {
-  mapEntityNotFound,
-  type PersistenceLayer,
-} from "@/layers/persistance/persistence.base";
+  mapNotFound,
+  type Storage,
+} from "@/layers/storage/storage";
 import { Organizations } from "@/features/organization/organization.service";
 import { CurrentUser } from "@/lib/auth";
 import {
@@ -16,7 +16,7 @@ import {
 /** Storage backend for projects. */
 export class ProjectStorage extends Context.Tag("ProjectStorage")<
   ProjectStorage,
-  PersistenceLayer<Project>
+  Storage<Project>
 >() {}
 
 /**
@@ -35,7 +35,7 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
   effect: Effect.gen(function* () {
     const storage = yield* ProjectStorage;
 
-    const toNotFound = mapEntityNotFound(
+    const toNotFound = mapNotFound(
       (id: ProjectId) => new ProjectNotFound({ id }),
     );
 
