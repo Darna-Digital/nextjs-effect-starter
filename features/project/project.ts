@@ -1,17 +1,17 @@
-import { Context, Effect } from "effect"
+import { Context, Effect } from "effect";
 import {
   mapEntityNotFound,
   type PersistenceLayer,
-} from "@/layers/persistance/persistence.base"
-import { Organizations } from "@/features/organization/organization"
-import { CurrentUser } from "@/lib/auth"
+} from "@/layers/persistance/persistence.base";
+import { Organizations } from "@/features/organization/organization.service";
+import { CurrentUser } from "@/lib/auth";
 import {
   ProjectNotFound,
   type CreateProject,
   type Project,
   type ProjectId,
   type UpdateProject,
-} from "./project.schema"
+} from "./project.schema";
 
 /** Storage backend for projects. */
 export class ProjectStorage extends Context.Tag("ProjectStorage")<
@@ -33,15 +33,14 @@ export class ProjectStorage extends Context.Tag("ProjectStorage")<
 export class Projects extends Effect.Service<Projects>()("Projects", {
   accessors: true,
   effect: Effect.gen(function* () {
-    const storage = yield* ProjectStorage
+    const storage = yield* ProjectStorage;
 
     const toNotFound = mapEntityNotFound(
       (id: ProjectId) => new ProjectNotFound({ id }),
-    )
+    );
 
     return {
-      getAll: () =>
-        storage.getAll().pipe(Effect.withSpan("Projects.getAll")),
+      getAll: () => storage.getAll().pipe(Effect.withSpan("Projects.getAll")),
 
       getById: (id: ProjectId) =>
         storage.getById(id).pipe(
@@ -54,11 +53,11 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
       create: (input: CreateProject) =>
         Effect.gen(function* () {
           // 1. Who is making this request? Pulled from context, not params.
-          const user = yield* CurrentUser
+          const user = yield* CurrentUser;
 
           // 2. Cross-service call: verify the target org exists.
           //    Fails with OrganizationNotFound which bubbles up the stack.
-          yield* Organizations.getById(input.organizationId)
+          yield* Organizations.getById(input.organizationId);
 
           // 3. Structured log, correlated to the current span automatically.
           yield* Effect.logInfo("Creating project").pipe(
@@ -67,14 +66,14 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
               "organization.id": input.organizationId,
               "project.name": input.name,
             }),
-          )
+          );
 
           return yield* storage.create({
             id: crypto.randomUUID() as ProjectId,
             createdBy: user.id,
             createdAt: new Date().toISOString(),
             ...input,
-          })
+          });
         }).pipe(
           Effect.withSpan("Projects.create", {
             attributes: {
@@ -99,6 +98,6 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
             attributes: { "project.id": id },
           }),
         ),
-    }
+    };
   }),
 }) {}

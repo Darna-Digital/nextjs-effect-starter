@@ -1,11 +1,11 @@
-import { Layer } from "effect"
-import { createMemoryPersistence } from "@/layers/persistance/persistence.memory"
-import type { Organization } from "./organization.schema"
+import { Layer } from "effect";
+import { createMemoryPersistence } from "@/layers/persistance/persistence.memory";
+import type { Organization } from "./organization.schema";
 import {
   Organizations,
   OrganizationStorage,
   ReservedOrganizationNames,
-} from "./organization"
+} from "./organization.service";
 
 /**
  * In-memory Layer — backs `Organizations` with a fresh `Ref`-based store.
@@ -20,8 +20,8 @@ export const OrganizationsMemory = ({
   seed = [],
   reserved = [],
 }: {
-  seed?: readonly Organization[]
-  reserved?: readonly string[]
+  seed?: readonly Organization[];
+  reserved?: readonly string[];
 } = {}) =>
   Organizations.Default.pipe(
     Layer.provide(
@@ -33,4 +33,4 @@ export const OrganizationsMemory = ({
         Layer.succeed(ReservedOrganizationNames, reserved),
       ),
     ),
-  )
+  );

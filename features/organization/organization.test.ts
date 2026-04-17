@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Effect, Either } from "effect";
-import { Organizations } from "./organization";
+import { Organizations } from "./organization.service";
 import { OrganizationsMemory } from "./organization.layers.memory";
 import type { Organization, OrganizationId } from "./organization.schema";
 
