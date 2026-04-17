@@ -1,57 +1,30 @@
-import { Effect, Schema } from "effect"
+import { Schema as S } from "effect"
+import { apiRoute } from "@/lib/http/api-route"
 import {
+  OrganizationId,
   UpdateOrganizationSchema,
-  type OrganizationId,
 } from "@/features/organization/entity/organization.schema"
-import {
-  organizationFunctions,
-  provideAndRun,
-} from "@/features/organization/adapters/organization.api.adapter"
+import { organizationFunctions } from "@/features/organization/adapters/organization.api.adapter"
 
-type RouteParams = { params: Promise<{ id: string }> }
+const Params = S.Struct({ id: OrganizationId })
 
-export async function GET(_request: Request, { params }: RouteParams) {
-  const { id } = await params
+export const GET = apiRoute({
+  span: "GET /api/organizations/:id",
+  params: Params,
+  handle: ({ params }) => organizationFunctions.getById(params.id),
+})
 
-  return provideAndRun(
-    Effect.gen(function* () {
-      const organization = yield* organizationFunctions.getById(
-        id as OrganizationId,
-      )
-      return Response.json(organization)
-    }).pipe(
-      Effect.withSpan("GET /api/organizations/:id", { attributes: { id } }),
-    ),
-  )
-}
+export const PUT = apiRoute({
+  span: "PUT /api/organizations/:id",
+  params: Params,
+  body: UpdateOrganizationSchema,
+  handle: ({ params, body }) =>
+    organizationFunctions.update(params.id, body),
+})
 
-export async function PUT(request: Request, { params }: RouteParams) {
-  const { id } = await params
-  const body = await request.json()
-
-  return provideAndRun(
-    Effect.gen(function* () {
-      const input = yield* Schema.decode(UpdateOrganizationSchema)(body)
-      const organization = yield* organizationFunctions.update(
-        id as OrganizationId,
-        input,
-      )
-      return Response.json(organization)
-    }).pipe(
-      Effect.withSpan("PUT /api/organizations/:id", { attributes: { id } }),
-    ),
-  )
-}
-
-export async function DELETE(_request: Request, { params }: RouteParams) {
-  const { id } = await params
-
-  return provideAndRun(
-    Effect.gen(function* () {
-      yield* organizationFunctions.remove(id as OrganizationId)
-      return Response.json({ deleted: true })
-    }).pipe(
-      Effect.withSpan("DELETE /api/organizations/:id", { attributes: { id } }),
-    ),
-  )
-}
+export const DELETE = apiRoute({
+  span: "DELETE /api/organizations/:id",
+  params: Params,
+  status: 204,
+  handle: ({ params }) => organizationFunctions.remove(params.id),
+})

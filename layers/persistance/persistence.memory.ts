@@ -11,7 +11,7 @@ export const createMemoryPersistence = <T extends { id: string }>(
     return {
       getAll: () => Ref.get(store),
 
-      getById: (id: string) =>
+      getById: (id) =>
         Effect.gen(function* () {
           const items = yield* Ref.get(store)
           const item = items.find((i) => i.id === id)
@@ -19,13 +19,13 @@ export const createMemoryPersistence = <T extends { id: string }>(
           return item
         }),
 
-      create: (item: T) =>
+      create: (item) =>
         Effect.gen(function* () {
           yield* Ref.update(store, (items) => [...items, item])
           return item
         }),
 
-      update: (id: string, partial: Partial<Omit<T, "id">>) =>
+      update: (id, partial) =>
         Effect.gen(function* () {
           const items = yield* Ref.get(store)
           const index = items.findIndex((i) => i.id === id)
@@ -39,7 +39,7 @@ export const createMemoryPersistence = <T extends { id: string }>(
           return updated
         }),
 
-      remove: (id: string) =>
+      remove: (id) =>
         Effect.gen(function* () {
           const items = yield* Ref.get(store)
           const filtered = items.filter((i) => i.id !== id)

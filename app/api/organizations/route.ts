@@ -1,27 +1,15 @@
-import { Effect, Schema } from "effect"
+import { apiRoute } from "@/lib/http/api-route"
 import { CreateOrganizationSchema } from "@/features/organization/entity/organization.schema"
-import {
-  organizationFunctions,
-  provideAndRun,
-} from "@/features/organization/adapters/organization.api.adapter"
+import { organizationFunctions } from "@/features/organization/adapters/organization.api.adapter"
 
-export async function GET() {
-  return provideAndRun(
-    Effect.gen(function* () {
-      const organizations = yield* organizationFunctions.getAll()
-      return Response.json(organizations)
-    }).pipe(Effect.withSpan("GET /api/organizations")),
-  )
-}
+export const GET = apiRoute({
+  span: "GET /api/organizations",
+  handle: () => organizationFunctions.getAll(),
+})
 
-export async function POST(request: Request) {
-  const body = await request.json()
-
-  return provideAndRun(
-    Effect.gen(function* () {
-      const input = yield* Schema.decode(CreateOrganizationSchema)(body)
-      const organization = yield* organizationFunctions.create(input)
-      return Response.json(organization, { status: 201 })
-    }).pipe(Effect.withSpan("POST /api/organizations")),
-  )
-}
+export const POST = apiRoute({
+  span: "POST /api/organizations",
+  body: CreateOrganizationSchema,
+  status: 201,
+  handle: ({ body }) => organizationFunctions.create(body),
+})

@@ -29,19 +29,40 @@ export class OrganizationNotFound extends Data.TaggedError(
   "OrganizationNotFound",
 )<{
   readonly id: OrganizationId
-}> {}
+}> {
+  toResponse(): Response {
+    return Response.json(
+      { error: "Not found", id: this.id },
+      { status: 404 },
+    )
+  }
+}
 
 export class OrganizationNameTaken extends Data.TaggedError(
   "OrganizationNameTaken",
 )<{
   readonly name: string
-}> {}
+}> {
+  toResponse(): Response {
+    return Response.json(
+      { error: "Name already taken", name: this.name },
+      { status: 409 },
+    )
+  }
+}
 
 export class OrganizationNameReserved extends Data.TaggedError(
   "OrganizationNameReserved",
 )<{
   readonly name: string
-}> {}
+}> {
+  toResponse(): Response {
+    return Response.json(
+      { error: "Name is reserved", name: this.name },
+      { status: 409 },
+    )
+  }
+}
 
 /**
  * Shape of error bodies returned by the organization API.

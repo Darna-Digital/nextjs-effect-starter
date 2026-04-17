@@ -1,16 +1,18 @@
 import { Effect } from "effect"
-import type {
-  OrganizationDependencies,
-  OrganizationFunctions,
-} from "../entity/organization.interfaces"
+import type { OrganizationDependencies } from "../entity/organization.interfaces"
 import {
   OrganizationNameReserved,
   OrganizationNameTaken,
 } from "../entity/organization.schema"
 
-export function createOrganizationFunctions(
-  d: OrganizationDependencies,
-): OrganizationFunctions {
+/**
+ * Pure business logic. Takes an already-decoded input (see the schema
+ * layer at the edge) and composes domain rules with injected side
+ * effects. Return type is inferred — consumers use
+ * `ReturnType<typeof createOrganizationFunctions>` if they need to
+ * reference it.
+ */
+export function createOrganizationFunctions(d: OrganizationDependencies) {
   /** Fail if `name` is reserved (compared lower-cased). */
   const assertNotReserved = (name: string) =>
     d.data.reservedNames.has(name.toLowerCase())
@@ -33,34 +35,49 @@ export function createOrganizationFunctions(
     getAll: () =>
       d.sideEffects.getAll().pipe(Effect.withSpan("Organization.getAll")),
 
-    getById: (id) =>
-      d.sideEffects
-        .getById(id)
-        .pipe(Effect.withSpan("Organization.getById", { attributes: { id } })),
+    getById: (id: Parameters<typeof d.sideEffects.getById>[0]) =>
+      d.sideEffects.getById(id).pipe(
+        Effect.withSpan("Organization.getById", {
+          attributes: { "organization.id": id },
+        }),
+      ),
 
-    create: (input) =>
+    create: (input: Parameters<typeof d.sideEffects.create>[0]) =>
       Effect.gen(function* () {
         yield* assertNotReserved(input.name)
         yield* assertNameAvailable(input.name)
         return yield* d.sideEffects.create(input)
       }).pipe(
         Effect.withSpan("Organization.create", {
-          attributes: { name: input.name },
+          attributes: { "organization.name": input.name },
         }),
       ),
 
-    update: (id, input) =>
+    update: (
+      id: Parameters<typeof d.sideEffects.update>[0],
+      input: Parameters<typeof d.sideEffects.update>[1],
+    ) =>
       Effect.gen(function* () {
         if (input.name !== undefined) {
           yield* assertNotReserved(input.name)
           yield* assertNameAvailable(input.name, id)
         }
         return yield* d.sideEffects.update(id, input)
-      }).pipe(Effect.withSpan("Organization.update", { attributes: { id } })),
+      }).pipe(
+        Effect.withSpan("Organization.update", {
+          attributes: { "organization.id": id },
+        }),
+      ),
 
-    remove: (id) =>
-      d.sideEffects
-        .remove(id)
-        .pipe(Effect.withSpan("Organization.remove", { attributes: { id } })),
+    remove: (id: Parameters<typeof d.sideEffects.remove>[0]) =>
+      d.sideEffects.remove(id).pipe(
+        Effect.withSpan("Organization.remove", {
+          attributes: { "organization.id": id },
+        }),
+      ),
   }
 }
+
+export type OrganizationFunctions = ReturnType<
+  typeof createOrganizationFunctions
+>

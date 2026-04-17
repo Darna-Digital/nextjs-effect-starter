@@ -23,7 +23,6 @@ const organizationListSchema = S.standardSchemaV1(S.Array(OrganizationSchema))
 const organizationSchema = S.standardSchemaV1(OrganizationSchema)
 const createOrganizationSchema = S.standardSchemaV1(CreateOrganizationSchema)
 const updateOrganizationSchema = S.standardSchemaV1(UpdateOrganizationSchema)
-const deletedSchema = S.standardSchemaV1(S.Struct({ deleted: S.Boolean }))
 const organizationApiErrorSchema = S.standardSchemaV1(
   OrganizationApiErrorSchema,
 )
@@ -96,7 +95,6 @@ export function useDeleteOrganization() {
     mutationFn: (id: OrganizationId) =>
       composableFetcher
         .url(`/api/organizations/${id}`)
-        .schema(deletedSchema)
         .errorSchema(organizationApiErrorSchema)
         .run("DELETE"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
