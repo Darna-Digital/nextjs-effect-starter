@@ -2,7 +2,11 @@ import { Effect } from "effect";
 import { createJsonPersistence } from "@/layers/persistance/persistence.json";
 import { StorageError } from "@/layers/persistance/persistence.base";
 import type { OrganizationDependencies } from "../entity/organization.interfaces";
-import { OrganizationNotFound } from "../entity/organization.schema";
+import {
+  OrganizationNotFound,
+  OrganizationNameTaken,
+  OrganizationNameReserved,
+} from "../entity/organization.schema";
 import { TracingLayer } from "@/lib/tracing";
 import { createOrganizationFunctions } from "../functions/organization.functions";
 import type {
@@ -18,7 +22,9 @@ const persistence = createJsonPersistence<Organization>(
 );
 
 const dependencies: OrganizationDependencies = {
-  data: {},
+  data: {
+    reservedNames: new Set(["admin", "system", "root"]),
+  },
   sideEffects: {
     getAll: () => persistence.getAll(),
 
@@ -70,7 +76,12 @@ const organizationFunctions = createOrganizationFunctions(dependencies);
 
 export { organizationFunctions };
 
-type OrganizationError = StorageError | OrganizationNotFound | ParseError;
+type OrganizationError =
+  | StorageError
+  | OrganizationNotFound
+  | OrganizationNameTaken
+  | OrganizationNameReserved
+  | ParseError;
 
 export const provideAndRun = <A>(
   effect: Effect.Effect<A, OrganizationError>,
@@ -80,6 +91,20 @@ export const provideAndRun = <A>(
       OrganizationNotFound: (e) =>
         Effect.succeed(
           Response.json({ error: "Not found", id: e.id }, { status: 404 }),
+        ),
+      OrganizationNameTaken: (e) =>
+        Effect.succeed(
+          Response.json(
+            { error: "Name already taken", name: e.name },
+            { status: 409 },
+          ),
+        ),
+      OrganizationNameReserved: (e) =>
+        Effect.succeed(
+          Response.json(
+            { error: "Name is reserved", name: e.name },
+            { status: 409 },
+          ),
         ),
       StorageError: (e) =>
         Effect.succeed(

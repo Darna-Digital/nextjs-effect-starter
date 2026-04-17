@@ -12,12 +12,13 @@ import { EntityNotFound } from "@/layers/persistance/persistence.base"
 
 export const createOrganizationDependenciesMock = (
   initial: Organization[] = [],
+  reservedNames: ReadonlySet<string> = new Set(),
 ): Effect.Effect<OrganizationDependencies> =>
   Effect.gen(function* () {
     const persistence = yield* createMemoryPersistence<Organization>(initial)
 
     return {
-      data: {},
+      data: { reservedNames },
       sideEffects: {
         getAll: () => persistence.getAll(),
 
