@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { effectSchemaResolver } from "@/lib/form/effect-schema-resolver"
+import { useForm } from "react-hook-form";
+import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
 import {
   CreateOrganizationSchema,
   type CreateOrganization,
-} from "../../organization.requests"
-import type { OrganizationFieldError } from "../hooks/use-organizations"
+} from "../../organization.requests";
+import type { OrganizationFieldError } from "../hooks/use-organizations";
 
 interface OrganizationFormProps {
   /**
@@ -14,10 +14,10 @@ interface OrganizationFormProps {
    * when the promise resolves, so server-side errors stay visible with
    * the user's input intact.
    */
-  onSubmit: (data: CreateOrganization) => Promise<unknown>
-  isPending?: boolean
+  onSubmit: (data: CreateOrganization) => Promise<unknown>;
+  isPending?: boolean;
   /** Structured error from the most recent submit. */
-  submitError?: OrganizationFieldError | null
+  submitError?: OrganizationFieldError | null;
 }
 
 export function OrganizationForm({
@@ -32,22 +32,22 @@ export function OrganizationForm({
     formState: { errors },
   } = useForm<CreateOrganization>({
     resolver: effectSchemaResolver(CreateOrganizationSchema),
-  })
+  });
 
   const handleFormSubmit = async (data: CreateOrganization) => {
     try {
-      await onSubmit(data)
-      reset()
+      await onSubmit(data);
+      reset();
     } catch {
       // Keep the user's input so they can correct it; the parent renders
       // the typed error via `submitError`.
     }
-  }
+  };
 
   const nameServerError =
-    submitError?.field === "name" ? submitError.message : undefined
+    submitError?.field === "name" ? submitError.message : undefined;
   const bannerError =
-    submitError && submitError.field === null ? submitError.message : undefined
+    submitError && submitError.field === null ? submitError.message : undefined;
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
@@ -71,9 +71,7 @@ export function OrganizationForm({
           <input
             id="name"
             placeholder="Acme Inc."
-            aria-invalid={
-              errors.name || nameServerError ? true : undefined
-            }
+            aria-invalid={errors.name || nameServerError ? true : undefined}
             {...register("name")}
             className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500 sm:text-sm/6"
           />
@@ -122,5 +120,5 @@ export function OrganizationForm({
         </button>
       </div>
     </form>
-  )
+  );
 }

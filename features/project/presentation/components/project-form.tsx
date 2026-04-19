@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { effectSchemaResolver } from "@/lib/form/effect-schema-resolver"
+import { useForm } from "react-hook-form";
+import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
 import {
   CreateProjectSchema,
   type CreateProject,
-} from "../../project.requests"
-import type { Organization } from "@/features/organization/organization.model"
-import type { ProjectFormError } from "../hooks/use-projects"
+} from "../../project.requests";
+import type { Organization } from "@/features/organization/organization.model";
+import type { ProjectFormError } from "../hooks/use-projects";
 
 interface ProjectFormProps {
   /** Organizations the user can attach the new project to. */
-  organizations: readonly Organization[]
+  organizations: readonly Organization[];
   /** Resolve on success, reject on failure. Form only resets on resolve. */
-  onSubmit: (data: CreateProject) => Promise<unknown>
-  isPending?: boolean
-  submitError?: ProjectFormError | null
+  onSubmit: (data: CreateProject) => Promise<unknown>;
+  isPending?: boolean;
+  submitError?: ProjectFormError | null;
 }
 
 export function ProjectForm({
@@ -34,23 +34,23 @@ export function ProjectForm({
     defaultValues: {
       organizationId: organizations[0]?.id,
     },
-  })
+  });
 
   const handleFormSubmit = async (data: CreateProject) => {
     try {
-      await onSubmit(data)
-      reset({ organizationId: organizations[0]?.id })
+      await onSubmit(data);
+      reset({ organizationId: organizations[0]?.id });
     } catch {
       // Keep user's input visible so they can correct and retry.
     }
-  }
+  };
 
   const orgServerError =
-    submitError?.field === "organizationId" ? submitError.message : undefined
+    submitError?.field === "organizationId" ? submitError.message : undefined;
   const bannerError =
-    submitError && submitError.field === null ? submitError.message : undefined
+    submitError && submitError.field === null ? submitError.message : undefined;
 
-  const disabled = isPending || organizations.length === 0
+  const disabled = isPending || organizations.length === 0;
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
@@ -163,5 +163,5 @@ export function ProjectForm({
         </button>
       </div>
     </form>
-  )
+  );
 }
