@@ -20,20 +20,20 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     volumes:
-      - ./infra/otel-collector/config.yml:/etc/otelcol-contrib/config.yaml
+      - ./otel/otel-collector/config.yml:/etc/otelcol-contrib/config.yaml
     ports:
       - "4318:4318" # OTLP HTTP
 
   tempo:
     image: grafana/tempo:2.7.2
     volumes:
-      - ./infra/tempo/config.yml:/etc/tempo.yaml
+      - ./otel/tempo/config.yml:/etc/tempo.yaml
     command: ["-config.file=/etc/tempo.yaml"]
 
   grafana:
     image: grafana/grafana:latest
     volumes:
-      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+      - ./otel/grafana/provisioning:/etc/grafana/provisioning
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
