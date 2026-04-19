@@ -6,14 +6,15 @@ import {
   composableFetcher,
   getFetchError,
 } from "@darna-digital/composable-fetcher"
+import { ProjectSchema, type ProjectId } from "../../project.model"
 import {
-  ProjectSchema,
   CreateProjectSchema,
   UpdateProjectSchema,
-  type ProjectId,
+  ProjectApiErrorSchema,
   type CreateProject,
   type UpdateProject,
-} from "../../project.schema"
+  type ProjectApiError,
+} from "../../project.requests"
 
 const QUERY_KEY = ["projects"] as const
 
@@ -22,17 +23,6 @@ const projectSchema = S.standardSchemaV1(ProjectSchema)
 const createProjectSchema = S.standardSchemaV1(CreateProjectSchema)
 const updateProjectSchema = S.standardSchemaV1(UpdateProjectSchema)
 
-/**
- * Shape of error bodies the project API can return. `"Not found"` covers
- * both `ProjectNotFound` *and* `OrganizationNotFound` — the backend uses
- * the same string because the frontend renders them the same way.
- */
-const ProjectApiErrorSchema = S.Union(
-  S.Struct({ error: S.Literal("Not found"), id: S.String }),
-  S.Struct({ error: S.Literal("Validation failed"), details: S.String }),
-  S.Struct({ error: S.Literal("Storage error"), cause: S.String }),
-)
-type ProjectApiError = typeof ProjectApiErrorSchema.Type
 const projectApiErrorSchema = S.standardSchemaV1(ProjectApiErrorSchema)
 
 export function useProjects() {

@@ -1,9 +1,7 @@
 import { Schema as S } from "effect";
 import { apiRoute } from "@/lib/http/api-route";
-import {
-  ProjectId,
-  UpdateProjectSchema,
-} from "@/features/project/project.schema";
+import { ProjectId } from "@/features/project/project.model";
+import { UpdateProjectSchema } from "@/features/project/project.requests";
 import { Projects } from "@/features/project/project.service";
 
 const Params = S.Struct({ id: ProjectId });

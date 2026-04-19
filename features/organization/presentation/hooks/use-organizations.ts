@@ -8,14 +8,16 @@ import {
 } from "@darna-digital/composable-fetcher"
 import {
   OrganizationSchema,
+  type OrganizationId,
+} from "../../organization.model"
+import {
   CreateOrganizationSchema,
   UpdateOrganizationSchema,
   OrganizationApiErrorSchema,
   type OrganizationApiError,
-  type OrganizationId,
   type CreateOrganization,
   type UpdateOrganization,
-} from "../../organization.schema"
+} from "../../organization.requests"
 
 const QUERY_KEY = ["organizations"] as const
 

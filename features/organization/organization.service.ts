@@ -7,11 +7,13 @@ import {
   OrganizationNotFound,
   OrganizationNameReserved,
   OrganizationNameTaken,
-  type CreateOrganization,
   type Organization,
   type OrganizationId,
-  type UpdateOrganization,
-} from "./organization.schema"
+} from "./organization.model"
+import type {
+  CreateOrganization,
+  UpdateOrganization,
+} from "./organization.requests"
 
 /**
  * Storage backend. Swap the Layer (JSON ↔ memory ↔ Postgres) without

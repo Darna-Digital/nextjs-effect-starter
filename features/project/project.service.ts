@@ -7,11 +7,10 @@ import { Organizations } from "@/features/organization/organization.service";
 import { CurrentUser } from "@/lib/auth";
 import {
   ProjectNotFound,
-  type CreateProject,
   type Project,
   type ProjectId,
-  type UpdateProject,
-} from "./project.schema";
+} from "./project.model";
+import type { CreateProject, UpdateProject } from "./project.requests";
 
 /** Storage backend for projects. */
 export class ProjectStorage extends Context.Tag("ProjectStorage")<

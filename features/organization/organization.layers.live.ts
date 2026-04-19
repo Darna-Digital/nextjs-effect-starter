@@ -1,6 +1,6 @@
 import { Layer } from "effect";
 import { jsonStorage } from "@/layers/storage/storage.json";
-import type { Organization } from "./organization.schema";
+import type { Organization } from "./organization.model";
 import {
   Organizations,
   OrganizationStorage,

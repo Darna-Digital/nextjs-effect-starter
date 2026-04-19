@@ -3,7 +3,7 @@
 import type {
   Organization,
   OrganizationId,
-} from "../../organization.schema"
+} from "../../organization.model"
 
 interface OrganizationListProps {
   organizations: readonly Organization[]

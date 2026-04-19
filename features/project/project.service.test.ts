@@ -5,11 +5,11 @@ import { ProjectsMemory } from "./project.layers.memory";
 import { OrganizationsMemory } from "@/features/organization/organization.layers.memory";
 import { Organizations } from "@/features/organization/organization.service";
 import { CurrentUser, type User } from "@/lib/auth";
-import type { Project } from "./project.schema";
+import type { Project } from "./project.model";
 import type {
   Organization,
   OrganizationId,
-} from "@/features/organization/organization.schema";
+} from "@/features/organization/organization.model";
 
 const alice: User = { id: "user-alice", email: "alice@example.com" };
 const bob: User = { id: "user-bob", email: "bob@example.com" };

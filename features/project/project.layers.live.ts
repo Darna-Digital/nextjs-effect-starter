@@ -1,6 +1,6 @@
 import { Layer } from "effect";
 import { jsonStorage } from "@/layers/storage/storage.json";
-import type { Project } from "./project.schema";
+import type { Project } from "./project.model";
 import { ProjectStorage, Projects } from "./project.service";
 
 /** JSON-file-backed Layer for Projects. */

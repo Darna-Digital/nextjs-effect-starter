@@ -1,5 +1,5 @@
 import { apiRoute } from "@/lib/http/api-route";
-import { CreateProjectSchema } from "@/features/project/project.schema";
+import { CreateProjectSchema } from "@/features/project/project.requests";
 import { Projects } from "@/features/project/project.service";
 
 export const GET = apiRoute({

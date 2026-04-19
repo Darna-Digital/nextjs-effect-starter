@@ -1,7 +1,7 @@
 "use client"
 
-import type { Project, ProjectId } from "../../project.schema"
-import type { Organization } from "@/features/organization/organization.schema"
+import type { Project, ProjectId } from "../../project.model"
+import type { Organization } from "@/features/organization/organization.model"
 
 interface ProjectListProps {
   projects: readonly Project[]

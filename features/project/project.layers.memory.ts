@@ -1,6 +1,6 @@
 import { Layer } from "effect";
 import { memoryStorage } from "@/layers/storage/storage.memory";
-import type { Project } from "./project.schema";
+import type { Project } from "./project.model";
 import { ProjectStorage, Projects } from "./project.service";
 
 /**

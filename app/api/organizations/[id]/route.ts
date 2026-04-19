@@ -1,9 +1,7 @@
 import { Schema as S } from "effect";
 import { apiRoute } from "@/lib/http/api-route";
-import {
-  OrganizationId,
-  UpdateOrganizationSchema,
-} from "@/features/organization/organization.schema";
+import { OrganizationId } from "@/features/organization/organization.model";
+import { UpdateOrganizationSchema } from "@/features/organization/organization.requests";
 import { Organizations } from "@/features/organization/organization.service";
 
 const Params = S.Struct({ id: OrganizationId });
