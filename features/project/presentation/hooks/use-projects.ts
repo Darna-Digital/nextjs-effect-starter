@@ -2,10 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Match, Schema as S } from "effect"
-import {
-  composableFetcher,
-  getFetchError,
-} from "@darna-digital/composable-fetcher"
+import { getFetchError } from "@darna-digital/composable-fetcher"
+import { apiClient } from "@/features/auth/presentation/api-client"
 import { ProjectSchema, type ProjectId } from "../../project.model"
 import {
   CreateProjectSchema,
@@ -29,7 +27,7 @@ export function useProjects() {
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: () =>
-      composableFetcher
+      apiClient
         .url("/api/projects")
         .schema(projectListSchema)
         .run("GET"),
@@ -40,7 +38,7 @@ export function useProject(id: ProjectId) {
   return useQuery({
     queryKey: [...QUERY_KEY, id],
     queryFn: () =>
-      composableFetcher
+      apiClient
         .url(`/api/projects/${id}`)
         .schema(projectSchema)
         .errorSchema(projectApiErrorSchema)
@@ -53,7 +51,7 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: (input: CreateProject) =>
-      composableFetcher
+      apiClient
         .url("/api/projects")
         .input(createProjectSchema)
         .schema(projectSchema)
@@ -69,7 +67,7 @@ export function useUpdateProject() {
 
   return useMutation({
     mutationFn: ({ id, input }: { id: ProjectId; input: UpdateProject }) =>
-      composableFetcher
+      apiClient
         .url(`/api/projects/${id}`)
         .input(updateProjectSchema)
         .schema(projectSchema)
@@ -85,7 +83,7 @@ export function useDeleteProject() {
 
   return useMutation({
     mutationFn: (id: ProjectId) =>
-      composableFetcher
+      apiClient
         .url(`/api/projects/${id}`)
         .errorSchema(projectApiErrorSchema)
         .run("DELETE"),

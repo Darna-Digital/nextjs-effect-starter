@@ -1,6 +1,6 @@
 import { Layer, ManagedRuntime } from "effect";
 import { TracingLayer } from "./tracing";
-import { AuthLive } from "@/features/auth/auth.layers.live";
+import { AuthStackLive } from "@/features/auth/auth.layers.live";
 import { OrganizationsLive } from "@/features/organization/organization.layers.live";
 import { ProjectsLive } from "@/features/project/project.layers.live";
 
@@ -14,7 +14,7 @@ import { ProjectsLive } from "@/features/project/project.layers.live";
  */
 const AppLayer = Layer.mergeAll(
   TracingLayer,
-  AuthLive,
+  AuthStackLive,
   OrganizationsLive,
   ProjectsLive,
 );

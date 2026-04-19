@@ -1,5 +1,6 @@
 import { Effect } from "effect"
-import { apiRoute, requireUser } from "@/lib/effect/http/api-route"
+import { apiRoute } from "@/lib/effect/http/api-route"
+import { requireUser } from "@/features/auth/auth.middleware"
 
 export const GET = apiRoute({
   span: "GET /api/auth/me",

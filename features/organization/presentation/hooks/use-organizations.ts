@@ -3,10 +3,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Match, Schema as S } from "effect";
 import {
-  composableFetcher,
   getFetchError,
   type FetcherThrownError,
 } from "@darna-digital/composable-fetcher";
+import { apiClient } from "@/features/auth/presentation/api-client";
 import {
   OrganizationSchema,
   type OrganizationId,
@@ -37,7 +37,7 @@ export function useOrganizations() {
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: () =>
-      composableFetcher
+      apiClient
         .url("/api/organizations")
         .schema(organizationListSchema)
         .run("GET"),
@@ -48,7 +48,7 @@ export function useOrganization(id: OrganizationId) {
   return useQuery({
     queryKey: [...QUERY_KEY, id],
     queryFn: () =>
-      composableFetcher
+      apiClient
         .url(`/api/organizations/${id}`)
         .schema(organizationSchema)
         .errorSchema(organizationApiErrorSchema)
@@ -61,7 +61,7 @@ export function useCreateOrganization() {
 
   return useMutation<unknown, OrganizationThrownError, CreateOrganization>({
     mutationFn: (input) =>
-      composableFetcher
+      apiClient
         .url("/api/organizations")
         .input(createOrganizationSchema)
         .schema(organizationSchema)
@@ -81,7 +81,7 @@ export function useUpdateOrganization() {
     { id: OrganizationId; input: UpdateOrganization }
   >({
     mutationFn: ({ id, input }) =>
-      composableFetcher
+      apiClient
         .url(`/api/organizations/${id}`)
         .input(updateOrganizationSchema)
         .schema(organizationSchema)
@@ -97,7 +97,7 @@ export function useDeleteOrganization() {
 
   return useMutation<void, OrganizationThrownError, OrganizationId>({
     mutationFn: (id) =>
-      composableFetcher
+      apiClient
         .url(`/api/organizations/${id}`)
         .errorSchema(organizationApiErrorSchema)
         .run("DELETE"),
