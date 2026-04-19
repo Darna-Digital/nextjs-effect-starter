@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
+import { AuthNav } from "@/features/auth/presentation/components/auth-nav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,6 +46,7 @@ export default function RootLayout({
               >
                 Projects
               </Link>
+              <AuthNav />
             </div>
           </nav>
           {children}

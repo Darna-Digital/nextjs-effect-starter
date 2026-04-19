@@ -2,6 +2,14 @@ import { Data, Effect, ManagedRuntime, Schema } from "effect";
 import { ParseError } from "effect/ParseResult";
 import { AppRuntime } from "@/lib/effect/layers/runtime";
 import { CurrentUser, type User } from "@/lib/effect/layers/auth";
+import { Auth } from "@/features/auth/auth.service";
+import { NotAuthenticated } from "@/features/auth/auth.model";
+
+/** Name of the httpOnly session cookie that carries the signed JWT. */
+export const SESSION_COOKIE = "session";
+
+/** Sentinel user bound when the request has no valid session. */
+const ANONYMOUS: User = { id: "anonymous", email: "anonymous@demo.local" };
 
 /**
  * Contract for errors that render themselves as HTTP responses.
@@ -39,13 +47,41 @@ type RouteHandler<Body, Params, E, A> = (ctx: {
 type NextRouteContext = { params: Promise<Record<string, string>> };
 
 /**
- * Stub auth — read `X-User-Id` header, otherwise fall back to an anonymous
- * demo user. Real deployments would parse a signed session / JWT.
+ * Resolve the current user from the session cookie. On missing/invalid
+ * token we bind the `ANONYMOUS` sentinel so public routes (register,
+ * login, health checks) still run; authenticated routes should assert
+ * via `requireUser` below.
  */
-const userFromRequest = (request: Request): User => {
-  const id = request.headers.get("x-user-id") ?? "anonymous";
-  return { id, email: `${id}@demo.local` };
+const userFromRequest = (request: Request) =>
+  Effect.gen(function* () {
+    const cookieHeader = request.headers.get("cookie");
+    if (!cookieHeader) return ANONYMOUS;
+    const token = parseCookie(cookieHeader, SESSION_COOKIE);
+    if (!token) return ANONYMOUS;
+    return yield* Auth.verifyToken(token).pipe(
+      Effect.catchAll(() => Effect.succeed(ANONYMOUS)),
+    );
+  });
+
+const parseCookie = (header: string, name: string): string | undefined => {
+  for (const part of header.split(";")) {
+    const [k, ...v] = part.trim().split("=");
+    if (k === name) return decodeURIComponent(v.join("="));
+  }
+  return undefined;
 };
+
+/**
+ * Route-handler helper: fails with `NotAuthenticated` if the current
+ * request has no valid session. Use inside `handle:` when a route
+ * requires a real user.
+ */
+export const requireUser = Effect.gen(function* () {
+  const user = yield* CurrentUser;
+  if (user.id === ANONYMOUS.id)
+    return yield* Effect.fail(new NotAuthenticated());
+  return user;
+});
 
 /**
  * Declarative Next.js route handler. Decodes `params` and `body` at the
@@ -80,9 +116,10 @@ export function apiRoute<
   ): Promise<Response> => {
     const url = new URL(request.url);
     const rawParams = (await context?.params) ?? {};
-    const user = userFromRequest(request);
 
     const program = Effect.gen(function* () {
+      const user = yield* userFromRequest(request);
+
       const params = config.params
         ? yield* Schema.decodeUnknown(config.params)(rawParams)
         : undefined;
@@ -96,10 +133,12 @@ export function apiRoute<
         body = yield* Schema.decodeUnknown(config.body)(raw);
       }
 
+      yield* Effect.annotateCurrentSpan("user.id", user.id);
+
       const result = yield* config.handle({
         body: body as InferSchema<BodySchema>,
         params: params as InferSchema<ParamsSchema>,
-      });
+      }).pipe(Effect.provideService(CurrentUser, user));
 
       yield* Effect.annotateCurrentSpan("http.response.status_code", status);
 
@@ -111,10 +150,8 @@ export function apiRoute<
         attributes: {
           "http.request.method": request.method,
           "http.route": url.pathname,
-          "user.id": user.id,
         },
       }),
-      Effect.provideService(CurrentUser, user),
       Effect.catchAll((error) =>
         Effect.sync(() => {
           if (error instanceof ParseError) {

@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm"
 import { mysqlTable, varchar } from "drizzle-orm/mysql-core"
 import type { OrganizationId } from "@/features/organization/organization.model"
 import type { ProjectId } from "@/features/project/project.model"
+import type { UserId } from "@/features/auth/auth.model"
 
 /**
  * MySQL tables for the whole app. Features don't import from here; only
@@ -39,6 +40,17 @@ export const projects = mysqlTable("projects", {
   createdBy: varchar("created_by", { length: 255 }).notNull(),
   // ISO 8601 string to match the domain's `createdAt: S.String`. Swap to
   // `datetime` (with conversion) if SQL-level date queries are needed.
+  createdAt: varchar("created_at", { length: 32 }).notNull(),
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// users
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const users = mysqlTable("users", {
+  id: varchar("id", { length: 36 }).primaryKey().$type<UserId>(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   createdAt: varchar("created_at", { length: 32 }).notNull(),
 })
 
