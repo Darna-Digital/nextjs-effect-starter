@@ -1,6 +1,6 @@
 import { Effect } from "effect"
 import { apiRoute } from "@/lib/effect/http/api-route"
-import { requireUser } from "@/features/auth/auth.middleware"
+import { requireUser } from "@/features/auth/auth.http"
 import { CreateProjectSchema } from "@/features/project/project.requests"
 import { Projects } from "@/features/project/project.service"
 

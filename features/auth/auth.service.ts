@@ -2,7 +2,6 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto"
 import { Context, Effect } from "effect"
 import { SignJWT, jwtVerify } from "jose"
 import type { Storage } from "@/lib/effect/layers/storage/storage.base"
-import { StorageError } from "@/lib/effect/layers/storage/storage.base"
 import {
   EmailAlreadyTaken,
   InvalidCredentials,
@@ -10,7 +9,6 @@ import {
   TokenSigningFailed,
   toPublicUser,
   type PublicUser,
-  type RefreshTokenId,
   type RefreshTokenRecord,
   type UserId,
   type UserRecord,
@@ -22,16 +20,9 @@ export class UserStorage extends Context.Tag("UserStorage")<
   Storage<UserRecord>
 >() {}
 
-/** Storage for refresh tokens — custom interface (not the generic Storage<T>). */
 export class RefreshTokenStorage extends Context.Tag("RefreshTokenStorage")<
   RefreshTokenStorage,
-  {
-    create: (record: RefreshTokenRecord) => Effect.Effect<void, StorageError>
-    findByToken: (
-      token: string,
-    ) => Effect.Effect<RefreshTokenRecord | null, StorageError>
-    deleteByToken: (token: string) => Effect.Effect<void, StorageError>
-  }
+  Storage<RefreshTokenRecord>
 >() {}
 
 /** HMAC secret bytes used to sign and verify access JWTs. */
@@ -88,22 +79,22 @@ const generateRefreshToken = () => randomBytes(32).toString("hex")
 export class Auth extends Effect.Service<Auth>()("Auth", {
   accessors: true,
   effect: Effect.gen(function* () {
-    const storage = yield* UserStorage
-    const refreshStorage = yield* RefreshTokenStorage
+    const users = yield* UserStorage
+    const refreshTokens = yield* RefreshTokenStorage
     const secret = yield* JwtSecret
     const expiresIn = yield* JwtExpiresIn
     const refreshTtlSeconds = yield* RefreshTokenTtlSeconds
 
     const findByEmail = (email: string) =>
-      storage
+      users
         .getAll()
         .pipe(
-          Effect.map((users) =>
-            users.find((u) => u.email.toLowerCase() === email.toLowerCase()),
+          Effect.map((all) =>
+            all.find((u) => u.email.toLowerCase() === email.toLowerCase()),
           ),
         )
 
-    const signToken = (user: UserRecord) =>
+    const signAccessToken = (user: UserRecord) =>
       Effect.tryPromise({
         try: () =>
           new SignJWT({ email: user.email })
@@ -115,19 +106,31 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
         catch: (cause) => new TokenSigningFailed({ cause }),
       })
 
-    const createRefreshToken = (userId: UserId) => {
+    const issueRefreshToken = (userId: UserId) => {
       const token = generateRefreshToken()
       const record: RefreshTokenRecord = {
-        id: crypto.randomUUID() as RefreshTokenId,
+        id: token,
         userId,
-        token,
         expiresAt: new Date(
           Date.now() + refreshTtlSeconds * 1000,
         ).toISOString(),
         createdAt: new Date().toISOString(),
       }
-      return refreshStorage.create(record).pipe(Effect.as(token))
+      return refreshTokens.create(record).pipe(Effect.as(token))
     }
+
+    /** Idempotent — missing rows are fine. */
+    const forgetRefreshToken = (token: string) =>
+      refreshTokens
+        .remove(token)
+        .pipe(Effect.catchTag("EntityNotFound", () => Effect.void))
+
+    const issueSession = (user: UserRecord) =>
+      Effect.gen(function* () {
+        const accessToken = yield* signAccessToken(user)
+        const refreshToken = yield* issueRefreshToken(user.id)
+        return { user: toPublicUser(user), accessToken, refreshToken }
+      })
 
     return {
       register: (input: Register) =>
@@ -145,15 +148,14 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
             createdAt: new Date().toISOString(),
           }
 
-          yield* storage.create(user)
-          const accessToken = yield* signToken(user)
-          const refreshToken = yield* createRefreshToken(user.id)
+          yield* users.create(user)
+          const session = yield* issueSession(user)
 
           yield* Effect.logInfo("User registered").pipe(
             Effect.annotateLogs({ "user.id": user.id }),
           )
 
-          return { user: toPublicUser(user), accessToken, refreshToken }
+          return session
         }).pipe(Effect.withSpan("Auth.register")),
 
       login: (input: Login) =>
@@ -163,55 +165,49 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
           if (!verifyPassword(input.password, user.passwordHash))
             return yield* Effect.fail(new InvalidCredentials())
 
-          const accessToken = yield* signToken(user)
-          const refreshToken = yield* createRefreshToken(user.id)
+          const session = yield* issueSession(user)
 
           yield* Effect.logInfo("User logged in").pipe(
             Effect.annotateLogs({ "user.id": user.id }),
           )
 
-          return { user: toPublicUser(user), accessToken, refreshToken }
+          return session
         }).pipe(Effect.withSpan("Auth.login")),
 
       /**
-       * Exchange a valid refresh token for a new access + refresh token pair.
-       * The old token is deleted before issuing the new pair (rotation). Fails
-       * with `RefreshTokenExpired` if the token is unknown or past its TTL.
+       * Exchange a valid refresh token for a new access + refresh pair.
+       * The old refresh token is deleted first (rotation). Fails with
+       * `RefreshTokenExpired` for unknown, expired, or orphaned tokens.
        */
       refresh: (token: string) =>
         Effect.gen(function* () {
-          const record = yield* refreshStorage.findByToken(token)
-          if (!record) return yield* Effect.fail(new RefreshTokenExpired())
+          const record = yield* refreshTokens
+            .getById(token)
+            .pipe(
+              Effect.catchTag("EntityNotFound", () =>
+                Effect.fail(new RefreshTokenExpired()),
+              ),
+            )
 
           if (new Date(record.expiresAt) <= new Date()) {
-            yield* refreshStorage.deleteByToken(token)
+            yield* forgetRefreshToken(token)
             return yield* Effect.fail(new RefreshTokenExpired())
           }
 
-          yield* refreshStorage.deleteByToken(token)
+          yield* forgetRefreshToken(token)
 
-          const userRecord = yield* storage.getById(record.userId).pipe(
-            Effect.catchAll(() => Effect.fail(new RefreshTokenExpired())),
-          )
+          const user = yield* users
+            .getById(record.userId)
+            .pipe(
+              Effect.catchAll(() => Effect.fail(new RefreshTokenExpired())),
+            )
 
-          const accessToken = yield* signToken(userRecord)
-          const newRefreshToken = yield* createRefreshToken(record.userId)
-
-          return {
-            user: toPublicUser(userRecord),
-            accessToken,
-            refreshToken: newRefreshToken,
-          }
+          return yield* issueSession(user)
         }).pipe(Effect.withSpan("Auth.refresh")),
 
-      /**
-       * Invalidate a session by deleting its refresh token. Idempotent —
-       * an unknown token is silently ignored.
-       */
+      /** Invalidate a session. Idempotent — unknown tokens are ignored. */
       logout: (token: string) =>
-        refreshStorage
-          .deleteByToken(token)
-          .pipe(Effect.withSpan("Auth.logout")),
+        forgetRefreshToken(token).pipe(Effect.withSpan("Auth.logout")),
 
       /**
        * Verify an access token. Returns `PublicUser` claims on success,

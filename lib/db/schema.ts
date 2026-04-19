@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm"
 import { mysqlTable, varchar } from "drizzle-orm/mysql-core"
 import type { OrganizationId } from "@/features/organization/organization.model"
 import type { ProjectId } from "@/features/project/project.model"
-import type { RefreshTokenId, UserId } from "@/features/auth/auth.model"
+import type { UserId } from "@/features/auth/auth.model"
 
 /**
  * MySQL tables for the whole app. Features don't import from here; only
@@ -55,16 +55,16 @@ export const users = mysqlTable("users", {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// refresh_tokens — one row per active session; rotated on each use
+// refresh_tokens — one row per active session; rotated on each use.
+// The primary key IS the secret token value — no separate id column.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const refreshTokens = mysqlTable("refresh_tokens", {
-  id: varchar("id", { length: 36 }).primaryKey().$type<RefreshTokenId>(),
+  id: varchar("id", { length: 128 }).primaryKey(),
   userId: varchar("user_id", { length: 36 })
     .notNull()
     .references(() => users.id)
     .$type<UserId>(),
-  token: varchar("token", { length: 128 }).notNull().unique(),
   expiresAt: varchar("expires_at", { length: 32 }).notNull(),
   createdAt: varchar("created_at", { length: 32 }).notNull(),
 })

@@ -3,9 +3,6 @@ import { Data, Schema as S } from "effect"
 export const UserId = S.String.pipe(S.brand("UserId"))
 export type UserId = typeof UserId.Type
 
-export const RefreshTokenId = S.String.pipe(S.brand("RefreshTokenId"))
-export type RefreshTokenId = typeof RefreshTokenId.Type
-
 /** Email after trim + lowercase, validated by Effect's email pattern. */
 export const Email = S.Trim.pipe(
   S.lowercased(),
@@ -44,11 +41,14 @@ export const toPublicUser = (u: UserRecord): PublicUser => ({
   email: u.email,
 })
 
-/** Persisted refresh token row. */
+/**
+ * Persisted refresh-token row. `id` is the secret token value itself — no
+ * separate column. Using the secret as the PK lets `Storage<T>` lookups
+ * (`getById(token)`) do what we want without a custom storage interface.
+ */
 export const RefreshTokenRecordSchema = S.Struct({
-  id: RefreshTokenId,
+  id: S.String,
   userId: UserId,
-  token: S.String,
   expiresAt: S.String,
   createdAt: S.String,
 })

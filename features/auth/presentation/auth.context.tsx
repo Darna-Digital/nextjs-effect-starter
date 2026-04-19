@@ -7,8 +7,11 @@ import {
   useEffect,
   useState,
 } from "react"
-import type { PublicUser } from "../auth.model"
-import { registerUnauthenticatedHandler } from "./api-client"
+import { Schema as S } from "effect"
+import { PublicUserSchema, type PublicUser } from "../auth.model"
+import { apiClient, registerUnauthenticatedHandler } from "./api-client"
+
+const meSchema = S.standardSchemaV1(S.Struct({ user: PublicUserSchema }))
 
 interface AuthContextValue {
   user: PublicUser | null
@@ -32,31 +35,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     registerUnauthenticatedHandler(clearUser)
   }, [clearUser])
 
-  // Hydrate on mount: ask the server who we are. The api-client transparently
-  // refreshes an expired access token, so this also covers the "cookie is
-  // present but JWT expired" case on page reload.
+  // Hydrate on mount: ask the server who we are. `apiClient`'s catch handler
+  // transparently refreshes an expired access token, so a single call covers
+  // all three cases: fresh cookie, expired JWT + valid refresh, or logged out.
   useEffect(() => {
     let cancelled = false
-    fetch("/api/auth/me", { credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) {
-          // Try refresh once, then retry /me.
-          const refreshRes = await fetch("/api/auth/refresh", {
-            method: "POST",
-            credentials: "include",
-          })
-          if (!refreshRes.ok) return null
-          const retry = await fetch("/api/auth/me", { credentials: "include" })
-          if (!retry.ok) return null
-          return (await retry.json()) as { user: PublicUser }
-        }
-        return (await res.json()) as { user: PublicUser }
-      })
+    apiClient
+      .url("/api/auth/me")
+      .schema(meSchema)
+      .run("GET")
       .then((data) => {
         if (cancelled) return
         if (data?.user) setUserState(data.user)
       })
-      .catch(() => {})
+      .catch(() => {
+        // Refresh already cleared cookies and called onUnauthenticated.
+      })
       .finally(() => {
         if (!cancelled) setIsLoading(false)
       })

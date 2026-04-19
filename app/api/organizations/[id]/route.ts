@@ -1,6 +1,6 @@
 import { Effect, Schema as S } from "effect"
 import { apiRoute } from "@/lib/effect/http/api-route"
-import { requireUser } from "@/features/auth/auth.middleware"
+import { requireUser } from "@/features/auth/auth.http"
 import { OrganizationId } from "@/features/organization/organization.model"
 import { UpdateOrganizationSchema } from "@/features/organization/organization.requests"
 import { Organizations } from "@/features/organization/organization.service"

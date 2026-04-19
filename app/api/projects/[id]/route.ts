@@ -1,6 +1,6 @@
 import { Effect, Schema as S } from "effect"
 import { apiRoute } from "@/lib/effect/http/api-route"
-import { requireUser } from "@/features/auth/auth.middleware"
+import { requireUser } from "@/features/auth/auth.http"
 import { ProjectId } from "@/features/project/project.model"
 import { UpdateProjectSchema } from "@/features/project/project.requests"
 import { Projects } from "@/features/project/project.service"
