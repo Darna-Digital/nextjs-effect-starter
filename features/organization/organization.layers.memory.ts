@@ -1,5 +1,5 @@
 import { Layer } from "effect";
-import { memoryStorage } from "@/layers/storage/storage.memory";
+import { createMemoryStorageLayer } from "@/layers/storage/storage.memory";
 import type { Organization } from "./organization.model";
 import {
   Organizations,
@@ -28,7 +28,7 @@ export const OrganizationsMemory = ({
       Layer.mergeAll(
         Layer.effect(
           OrganizationStorage,
-          memoryStorage<Organization>([...seed]),
+          createMemoryStorageLayer<Organization>([...seed]),
         ),
         Layer.succeed(ReservedOrganizationNames, reserved),
       ),
