@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { OrganizationForm } from "@/features/organization/presentation/components/organization-form"
-import { OrganizationList } from "@/features/organization/presentation/components/organization-list"
+import { OrganizationForm } from "@/features/organization/presentation/components/organization-form";
+import { OrganizationList } from "@/features/organization/presentation/components/organization-list";
 import {
   useOrganizations,
   useCreateOrganization,
   useDeleteOrganization,
   parseOrganizationError,
-} from "@/features/organization/presentation/hooks/use-organizations"
+} from "@/features/organization/presentation/hooks/use-organizations";
 
 export default function OrganizationsPage() {
-  const { data: organizations = [], isLoading } = useOrganizations()
-  const createMutation = useCreateOrganization()
-  const deleteMutation = useDeleteOrganization()
+  const { data: organizations = [], isLoading } = useOrganizations();
+  const createMutation = useCreateOrganization();
+  const deleteMutation = useDeleteOrganization();
 
   return (
     <main className="w-full px-4 py-16 sm:px-6 lg:px-8">
@@ -53,12 +53,12 @@ export default function OrganizationsPage() {
             ) : (
               <OrganizationList
                 organizations={organizations}
-                onDelete={(id) => deleteMutation.mutate(id)}
+                onDelete={deleteMutation.mutate}
               />
             )}
           </div>
         </section>
       </div>
     </main>
-  )
+  );
 }
