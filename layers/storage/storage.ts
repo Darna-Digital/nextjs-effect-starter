@@ -27,6 +27,16 @@ export class EntityNotFound<Id extends string = string> {
   constructor(readonly id: Id) {}
 }
 
+/**
+ * The entity can't be removed because another row references it via a
+ * foreign key. Storage backends that enforce referential integrity
+ * (MySQL, Postgres) produce this; in-memory / JSON storage never does.
+ */
+export class EntityInUse<Id extends string = string> {
+  readonly _tag = "EntityInUse"
+  constructor(readonly id: Id) {}
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Contract
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,6 +51,11 @@ type LookupError<T extends { id: string }> =
   | EntityNotFound<T["id"]>
   | StorageError
 
+/** Error channel for `remove` — superset of lookup, adds FK violation. */
+type RemoveError<T extends { id: string }> =
+  | LookupError<T>
+  | EntityInUse<T["id"]>
+
 /**
  * Generic storage contract for any entity with an `id` field.
  * Swap implementations (JSON ↔ memory ↔ Postgres) without touching
@@ -51,7 +66,7 @@ export interface Storage<T extends { id: string }> {
   getById: (id: T["id"]) => Effect.Effect<T, LookupError<T>>
   create: (item: T) => Effect.Effect<T, StorageError>
   update: (id: T["id"], patch: Patch<T>) => Effect.Effect<T, LookupError<T>>
-  remove: (id: T["id"]) => Effect.Effect<void, LookupError<T>>
+  remove: (id: T["id"]) => Effect.Effect<void, RemoveError<T>>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -67,11 +82,6 @@ export interface Storage<T extends { id: string }> {
  *
  * The `id` argument is branded: if storage returns `EntityNotFound<OrganizationId>`,
  * the callback receives an `OrganizationId` — no cast needed in feature code.
- *
- * The two `as` casts exist only because TypeScript's `Exclude` can't prove in
- * general that removing `EntityNotFound<Id>` from `E | EntityNotFound<Id>`
- * yields `Exclude<E, EntityNotFound<Id>>`. Runtime behavior is plain
- * `Effect.catchTag`.
  */
 export const mapNotFound =
   <Id extends string, DomainError>(toError: (id: Id) => DomainError) =>
@@ -83,3 +93,21 @@ export const mapNotFound =
       "EntityNotFound",
       (e) => Effect.fail(toError(e.id)),
     ) as Effect.Effect<A, Exclude<E, EntityNotFound<Id>> | DomainError, R>
+
+/**
+ * Translate a generic `EntityInUse<Id>` into a domain-specific error.
+ *
+ *     storage.remove(id).pipe(
+ *       mapInUse((id) => new OrganizationInUse({ id })),
+ *     )
+ */
+export const mapInUse =
+  <Id extends string, DomainError>(toError: (id: Id) => DomainError) =>
+  <A, E, R>(
+    self: Effect.Effect<A, E | EntityInUse<Id>, R>,
+  ): Effect.Effect<A, Exclude<E, EntityInUse<Id>> | DomainError, R> =>
+    Effect.catchTag(
+      self as Effect.Effect<A, EntityInUse<Id>, R>,
+      "EntityInUse",
+      (e) => Effect.fail(toError(e.id)),
+    ) as Effect.Effect<A, Exclude<E, EntityInUse<Id>> | DomainError, R>

@@ -1,9 +1,11 @@
 import { Context, Effect } from "effect"
 import {
+  mapInUse,
   mapNotFound,
   type Storage,
 } from "@/layers/storage/storage"
 import {
+  OrganizationInUse,
   OrganizationNotFound,
   OrganizationNameReserved,
   OrganizationNameTaken,
@@ -70,6 +72,10 @@ export class Organizations extends Effect.Service<Organizations>()(
         (id: OrganizationId) => new OrganizationNotFound({ id }),
       )
 
+      const toInUse = mapInUse(
+        (id: OrganizationId) => new OrganizationInUse({ id }),
+      )
+
       return {
         getAll: () =>
           storage.getAll().pipe(Effect.withSpan("Organizations.getAll")),
@@ -112,6 +118,7 @@ export class Organizations extends Effect.Service<Organizations>()(
         remove: (id: OrganizationId) =>
           storage.remove(id).pipe(
             toNotFound,
+            toInUse,
             Effect.withSpan("Organizations.remove", {
               attributes: { "organization.id": id },
             }),

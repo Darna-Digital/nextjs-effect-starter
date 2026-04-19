@@ -135,6 +135,14 @@ const matchApiError = Match.type<OrganizationApiError>().pipe(
     field: null,
     message: "Organization not found.",
   })),
+  Match.discriminator("error")(
+    "Organization has dependent projects",
+    () => ({
+      field: null,
+      message:
+        "Can't delete: this organization still has projects. Delete those first, then try again.",
+    }),
+  ),
   Match.discriminator("error")("Storage error", () => ({
     field: null,
     message: "Something went wrong on our side. Please try again.",

@@ -3,7 +3,26 @@ import { Effect } from "effect"
 import { eq } from "drizzle-orm"
 import type { MySqlTable } from "drizzle-orm/mysql-core"
 import type { Db } from "@/lib/db/client"
-import { EntityNotFound, StorageError, type Storage } from "./storage"
+import {
+  EntityInUse,
+  EntityNotFound,
+  StorageError,
+  type Storage,
+} from "./storage"
+
+/**
+ * MySQL: row referenced by another row via FK (ER_ROW_IS_REFERENCED_2, errno 1451).
+ * Drizzle wraps the mysql2 driver error in its own Error, so we walk the
+ * `.cause` chain looking for the driver-level code.
+ */
+const isFkReferencedError = (cause: unknown): boolean => {
+  let e = cause as { code?: string; errno?: number; cause?: unknown } | undefined
+  while (e) {
+    if (e.code === "ER_ROW_IS_REFERENCED_2" || e.errno === 1451) return true
+    e = e.cause as typeof e
+  }
+  return false
+}
 
 /**
  * Drizzle-backed `Storage<T>` for a MySQL table.
@@ -81,7 +100,15 @@ export const mysqlStorage = <T extends { id: string }>(
         const existing = yield* selectById(id)
         if (existing.length === 0)
           return yield* Effect.fail(new EntityNotFound(id))
-        yield* tryDb(() => db.delete(table).where(eq(table.id, id)))
+        // Distinguish FK violation from generic storage failure so feature
+        // code can translate it into a domain error (e.g. 409 instead of 500).
+        yield* Effect.tryPromise({
+          try: () => db.delete(table).where(eq(table.id, id)),
+          catch: (cause) =>
+            isFkReferencedError(cause)
+              ? new EntityInUse(id)
+              : new StorageError({ cause }),
+        })
       }),
   }
 }

@@ -55,3 +55,17 @@ export class OrganizationNameReserved extends Data.TaggedError(
     )
   }
 }
+
+export class OrganizationInUse extends Data.TaggedError("OrganizationInUse")<{
+  readonly id: OrganizationId
+}> {
+  toResponse(): Response {
+    return Response.json(
+      {
+        error: "Organization has dependent projects",
+        id: this.id,
+      },
+      { status: 409 },
+    )
+  }
+}

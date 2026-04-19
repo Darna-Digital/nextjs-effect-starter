@@ -26,6 +26,10 @@ export const OrganizationApiErrorSchema = S.Union(
   S.Struct({ error: S.Literal("Name already taken"), name: S.String }),
   S.Struct({ error: S.Literal("Name is reserved"), name: S.String }),
   S.Struct({ error: S.Literal("Not found"), id: S.String }),
+  S.Struct({
+    error: S.Literal("Organization has dependent projects"),
+    id: S.String,
+  }),
   S.Struct({ error: S.Literal("Validation failed"), details: S.String }),
   S.Struct({ error: S.Literal("Storage error"), cause: S.String }),
 )
