@@ -1,5 +1,5 @@
 import { Layer } from "effect";
-import { createMysqlStorageLayer } from "@/layers/storage/storage.mysql";
+import { createMysqlStorageLayer } from "@/lib/effect/layers/storage/storage.mysql";
 import { db } from "@/lib/db/client";
 import { projects } from "@/lib/db/schema";
 import type { Project } from "./project.model";

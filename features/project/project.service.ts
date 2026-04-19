@@ -1,7 +1,7 @@
 import { Context, Effect } from "effect"
-import type { Storage } from "@/layers/storage/storage"
+import type { Storage } from "@/lib/effect/layers/storage/storage.base"
 import { Organizations } from "@/features/organization/organization.service"
-import { CurrentUser } from "@/lib/auth"
+import { CurrentUser } from "@/lib/effect/layers/auth"
 import {
   ProjectNotFound,
   type Project,

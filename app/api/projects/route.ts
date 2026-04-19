@@ -1,4 +1,4 @@
-import { apiRoute } from "@/lib/http/api-route";
+import { apiRoute } from "@/lib/effect/http/api-route";
 import { CreateProjectSchema } from "@/features/project/project.requests";
 import { Projects } from "@/features/project/project.service";
 

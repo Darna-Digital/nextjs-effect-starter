@@ -1,5 +1,5 @@
 import { Schema as S } from "effect";
-import { apiRoute } from "@/lib/http/api-route";
+import { apiRoute } from "@/lib/effect/http/api-route";
 import { OrganizationId } from "@/features/organization/organization.model";
 import { UpdateOrganizationSchema } from "@/features/organization/organization.requests";
 import { Organizations } from "@/features/organization/organization.service";

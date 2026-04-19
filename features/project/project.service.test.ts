@@ -4,7 +4,7 @@ import { Projects } from "./project.service";
 import { ProjectsMemory } from "./project.layers.memory";
 import { OrganizationsMemory } from "@/features/organization/organization.layers.memory";
 import { Organizations } from "@/features/organization/organization.service";
-import { CurrentUser, type User } from "@/lib/auth";
+import { CurrentUser, type User } from "@/lib/effect/layers/auth";
 import type { Project } from "./project.model";
 import type {
   Organization,

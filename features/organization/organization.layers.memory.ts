@@ -1,5 +1,5 @@
 import { Layer } from "effect";
-import { createMemoryStorageLayer } from "@/layers/storage/storage.memory";
+import { createMemoryStorageLayer } from "@/lib/effect/layers/storage/storage.memory";
 import type { Organization } from "./organization.model";
 import {
   Organizations,

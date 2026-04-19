@@ -1,5 +1,5 @@
 import { Context, Effect } from "effect"
-import type { Storage } from "@/layers/storage/storage"
+import type { Storage } from "@/lib/effect/layers/storage/storage.base"
 import {
   OrganizationInUse,
   OrganizationNotFound,

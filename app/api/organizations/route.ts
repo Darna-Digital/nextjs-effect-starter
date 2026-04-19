@@ -1,4 +1,4 @@
-import { apiRoute } from "@/lib/http/api-route";
+import { apiRoute } from "@/lib/effect/http/api-route";
 import { CreateOrganizationSchema } from "@/features/organization/organization.requests";
 import { Organizations } from "@/features/organization/organization.service";
 

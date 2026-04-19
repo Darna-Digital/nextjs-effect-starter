@@ -1,5 +1,5 @@
 import { Schema as S } from "effect";
-import { apiRoute } from "@/lib/http/api-route";
+import { apiRoute } from "@/lib/effect/http/api-route";
 import { ProjectId } from "@/features/project/project.model";
 import { UpdateProjectSchema } from "@/features/project/project.requests";
 import { Projects } from "@/features/project/project.service";

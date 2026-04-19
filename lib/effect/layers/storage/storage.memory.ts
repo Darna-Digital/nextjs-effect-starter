@@ -1,5 +1,5 @@
 import { Effect, Ref } from "effect";
-import { EntityNotFound, type Storage } from "./storage";
+import { EntityNotFound, type Storage } from "./storage.base";
 
 /**
  * In-memory `Storage<T>` backed by a `Ref`. Used by tests and dev seeding.

@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import * as fs from "node:fs/promises";
-import { EntityNotFound, StorageError, type Storage } from "./storage";
+import { EntityNotFound, StorageError, type Storage } from "./storage.base";
 
 /**
  * JSON-file-backed `Storage<T>`. Reads and writes the whole file on every

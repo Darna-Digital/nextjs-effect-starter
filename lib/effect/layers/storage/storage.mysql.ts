@@ -8,7 +8,7 @@ import {
   EntityNotFound,
   StorageError,
   type Storage,
-} from "./storage";
+} from "./storage.base";
 
 /**
  * MySQL: row referenced by another row via FK (ER_ROW_IS_REFERENCED_2, errno 1451).
