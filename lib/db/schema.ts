@@ -1,9 +1,51 @@
+import { relations } from "drizzle-orm"
+import { mysqlTable, varchar } from "drizzle-orm/mysql-core"
+import type { OrganizationId } from "@/features/organization/organization.model"
+import type { ProjectId } from "@/features/project/project.model"
+
 /**
- * Aggregate schema for drizzle-kit.
+ * MySQL tables for the whole app. Features don't import from here; only
+ * the feature's `*.layers.live.ts` adapter does. This keeps model/service
+ * code storage-agnostic — the only coupling back to features is the
+ * branded ID types, which are pure TypeScript brands with no runtime cost.
  *
- * Each feature owns its own `*.table.ts` file — this barrel just re-exports
- * them so `drizzle-kit push/generate/studio` can find everything in one place.
+ * `.$type<XxxId>()` preserves each brand through Drizzle inference: the
+ * DB column is plain `varchar`, but TypeScript sees it as the branded ID
+ * end-to-end.
  */
 
-export * from "@/features/organization/organization.table"
-export * from "@/features/project/project.table"
+// ─────────────────────────────────────────────────────────────────────────────
+// organizations
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const organizations = mysqlTable("organizations", {
+  id: varchar("id", { length: 36 }).primaryKey().$type<OrganizationId>(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: varchar("description", { length: 1024 }),
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// projects — belongs to an organization
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const projects = mysqlTable("projects", {
+  id: varchar("id", { length: 36 }).primaryKey().$type<ProjectId>(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: varchar("description", { length: 1024 }),
+  organizationId: varchar("organization_id", { length: 36 })
+    .notNull()
+    .references(() => organizations.id)
+    .$type<OrganizationId>(),
+  createdBy: varchar("created_by", { length: 255 }).notNull(),
+  // ISO 8601 string to match the domain's `createdAt: S.String`. Swap to
+  // `datetime` (with conversion) if SQL-level date queries are needed.
+  createdAt: varchar("created_at", { length: 32 }).notNull(),
+})
+
+/** Teaches `db.query.projects.findMany({ with: { organization: true } })` how to join. */
+export const projectsRelations = relations(projects, ({ one }) => ({
+  organization: one(organizations, {
+    fields: [projects.organizationId],
+    references: [organizations.id],
+  }),
+}))

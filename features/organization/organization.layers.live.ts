@@ -1,8 +1,8 @@
 import { Layer } from "effect"
 import { mysqlStorage } from "@/layers/storage/storage.mysql"
 import { db } from "@/lib/db/client"
+import { organizations } from "@/lib/db/schema"
 import type { Organization } from "./organization.model"
-import { organizations } from "./organization.table"
 import {
   Organizations,
   OrganizationStorage,

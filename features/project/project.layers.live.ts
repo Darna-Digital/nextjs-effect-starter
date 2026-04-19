@@ -1,8 +1,8 @@
 import { Layer } from "effect"
 import { mysqlStorage } from "@/layers/storage/storage.mysql"
 import { db } from "@/lib/db/client"
+import { projects } from "@/lib/db/schema"
 import type { Project } from "./project.model"
-import { projects } from "./project.table"
 import { ProjectStorage, Projects } from "./project.service"
 
 /** MySQL-backed Layer for Projects (via Drizzle). */
