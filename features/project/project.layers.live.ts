@@ -1,14 +1,13 @@
-import { Layer } from "effect";
-import { jsonStorage } from "@/layers/storage/storage.json";
-import type { Project } from "./project.model";
-import { ProjectStorage, Projects } from "./project.service";
+import { Layer } from "effect"
+import { mysqlStorage } from "@/layers/storage/storage.mysql"
+import { db } from "@/lib/db/client"
+import type { Project } from "./project.model"
+import { projects } from "./project.table"
+import { ProjectStorage, Projects } from "./project.service"
 
-/** JSON-file-backed Layer for Projects. */
+/** MySQL-backed Layer for Projects (via Drizzle). */
 export const ProjectsLive = Projects.Default.pipe(
   Layer.provide(
-    Layer.succeed(
-      ProjectStorage,
-      jsonStorage<Project>("./data/projects.json"),
-    ),
+    Layer.succeed(ProjectStorage, mysqlStorage<Project>(db, projects)),
   ),
-);
+)

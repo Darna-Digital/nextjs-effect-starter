@@ -1,21 +1,23 @@
-import { Layer } from "effect";
-import { jsonStorage } from "@/layers/storage/storage.json";
-import type { Organization } from "./organization.model";
+import { Layer } from "effect"
+import { mysqlStorage } from "@/layers/storage/storage.mysql"
+import { db } from "@/lib/db/client"
+import type { Organization } from "./organization.model"
+import { organizations } from "./organization.table"
 import {
   Organizations,
   OrganizationStorage,
   ReservedOrganizationNames,
-} from "./organization.service";
+} from "./organization.service"
 
-/** Layer that provides `Organizations` backed by the JSON file store. */
+/** Layer that provides `Organizations` backed by MySQL (via Drizzle). */
 export const OrganizationsLive = Organizations.Default.pipe(
   Layer.provide(
     Layer.mergeAll(
       Layer.succeed(
         OrganizationStorage,
-        jsonStorage<Organization>("./data/organizations.json"),
+        mysqlStorage<Organization>(db, organizations),
       ),
       Layer.succeed(ReservedOrganizationNames, ["admin", "system", "root"]),
     ),
   ),
-);
+)
