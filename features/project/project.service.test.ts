@@ -74,7 +74,11 @@ describe("Projects.create", () => {
     }
   });
 
-  it("records the current user as the creator (implicit identity)", async () => {
+  it("stamps the current user as the owner — identity comes from context", async () => {
+    // Same service call, different identity provided via Layer.succeed.
+    // This is Effect DI: Projects.create doesn't take a userId parameter;
+    // it reads `CurrentUser` from context, and tests swap the identity
+    // layer to prove the wiring.
     const asAlice = await run(
       Projects.create({ name: "Alpha", organizationId: orgA.id }),
       { organizations: [orgA], user: alice },
@@ -84,7 +88,7 @@ describe("Projects.create", () => {
       { organizations: [orgA], user: bob },
     );
 
-    expect(Either.isRight(asAlice) && asAlice.right.createdBy).toBe(alice.id);
-    expect(Either.isRight(asBob) && asBob.right.createdBy).toBe(bob.id);
+    expect(Either.isRight(asAlice) && asAlice.right.ownerId).toBe(alice.id);
+    expect(Either.isRight(asBob) && asBob.right.ownerId).toBe(bob.id);
   });
 });

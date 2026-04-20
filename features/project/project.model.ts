@@ -3,6 +3,7 @@ import {
   OrganizationId,
   type Organization,
 } from "@/features/organization/organization.model"
+import { UserId } from "@/features/auth/auth.model"
 
 export const ProjectId = S.String.pipe(S.brand("ProjectId"))
 export type ProjectId = typeof ProjectId.Type
@@ -24,7 +25,8 @@ export const ProjectSchema = S.Struct({
   name: ProjectName,
   description: S.optional(S.String),
   organizationId: OrganizationId,
-  createdBy: S.String,
+  /** The user who owns this project. Stamped from `CurrentUser` on create. */
+  ownerId: UserId,
   createdAt: S.String,
 })
 export type Project = typeof ProjectSchema.Type

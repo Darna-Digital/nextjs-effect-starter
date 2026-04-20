@@ -2,6 +2,7 @@ import { Context, Effect } from "effect"
 import type { Storage } from "@/lib/effect/layers/storage/storage.base"
 import { Organizations } from "@/features/organization/organization.service"
 import { CurrentUser } from "@/lib/effect/layers/auth"
+import type { UserId } from "@/features/auth/auth.model"
 import {
   ProjectNotFound,
   type Project,
@@ -48,6 +49,7 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
       create: (input: CreateProject) =>
         Effect.gen(function* () {
           // 1. Who is making this request? Pulled from context, not params.
+          //    This is Effect DI in action — identity is a dependency.
           const user = yield* CurrentUser
 
           // 2. Cross-service call: verify the target org exists.
@@ -65,7 +67,10 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
 
           return yield* storage.create({
             id: crypto.randomUUID() as ProjectId,
-            createdBy: user.id,
+            // `CurrentUser` has a generic `id: string` in `lib/` (no feature
+            // imports). At runtime it's always a UserId — produced by
+            // `Auth.verifyToken` on the way in. Cast once, here.
+            ownerId: user.id as UserId,
             createdAt: new Date().toISOString(),
             ...input,
           })

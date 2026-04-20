@@ -37,7 +37,10 @@ export const projects = mysqlTable("projects", {
     .notNull()
     .references(() => organizations.id)
     .$type<OrganizationId>(),
-  createdBy: varchar("created_by", { length: 255 }).notNull(),
+  ownerId: varchar("owner_id", { length: 36 })
+    .notNull()
+    .references(() => users.id)
+    .$type<UserId>(),
   // ISO 8601 string to match the domain's `createdAt: S.String`. Swap to
   // `datetime` (with conversion) if SQL-level date queries are needed.
   createdAt: varchar("created_at", { length: 32 }).notNull(),
