@@ -1,16 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { Effect, Either, Layer } from "effect";
-import { Projects } from "./project.service";
-import { ProjectsMemory } from "./project.layers.memory";
-import { OrganizationsMemory } from "@/features/organization/organization.layers.memory";
-import { Organizations } from "@/features/organization/organization.service";
+import { Projects } from "@/features/project/service/project.service";
+import { ProjectsMemory } from "@/features/project/layer/project.layer.memory";
+import { OrganizationsMemory } from "@/features/organization/layer/organization.layer.memory";
+import { Organizations } from "@/features/organization/service/organization.service";
 import { CurrentUser, type User } from "@/lib/effect/layers/auth";
-import type { Project, ProjectId } from "./project.model";
-import type { UserId } from "@/features/auth/auth.model";
+import type { Project, ProjectId } from "@/features/project/schema/project.schema.model";
+import type { UserId } from "@/features/auth/schema/auth.schema.model";
 import type {
   Organization,
   OrganizationId,
-} from "@/features/organization/organization.model";
+} from "@/features/organization/schema/organization.schema.model";
 
 const alice: User = { id: "user-alice", email: "alice@example.com" };
 const bob: User = { id: "user-bob", email: "bob@example.com" };

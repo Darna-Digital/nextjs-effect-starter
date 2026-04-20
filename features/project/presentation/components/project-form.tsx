@@ -5,8 +5,8 @@ import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
 import {
   CreateProjectSchema,
   type CreateProject,
-} from "../../project.requests";
-import type { Organization } from "@/features/organization/organization.model";
+} from "@/features/project/schema/project.schema.requests";
+import type { Organization } from "@/features/organization/schema/organization.schema.model";
 import type { ProjectFormError } from "../hooks/use-projects";
 
 interface ProjectFormProps {

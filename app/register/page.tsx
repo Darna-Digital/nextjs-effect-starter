@@ -7,7 +7,7 @@ import {
   parseAuthError,
   useRegister,
 } from "@/features/auth/presentation/hooks/use-auth"
-import type { Register } from "@/features/auth/auth.requests"
+import type { Register } from "@/features/auth/schema/auth.schema.requests"
 
 export default function RegisterPage() {
   const router = useRouter()

@@ -1,8 +1,8 @@
 import { relations } from "drizzle-orm"
 import { mysqlTable, varchar } from "drizzle-orm/mysql-core"
-import type { OrganizationId } from "@/features/organization/organization.model"
-import type { ProjectId } from "@/features/project/project.model"
-import type { UserId } from "@/features/auth/auth.model"
+import type { OrganizationId } from "@/features/organization/schema/organization.schema.model"
+import type { ProjectId } from "@/features/project/schema/project.schema.model"
+import type { UserId } from "@/features/auth/schema/auth.schema.model"
 
 /**
  * MySQL tables for the whole app. Features don't import from here; only

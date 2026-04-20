@@ -1,8 +1,8 @@
 import { Layer, ManagedRuntime } from "effect";
 import { TracingLayer } from "./tracing";
-import { AuthStackLive } from "@/features/auth/auth.layers.live";
-import { OrganizationsLive } from "@/features/organization/organization.layers.live";
-import { ProjectsLive } from "@/features/project/project.layers.live";
+import { AuthStackLive } from "@/features/auth/layer/auth.layer.live";
+import { OrganizationsLive } from "@/features/organization/layer/organization.layer.live";
+import { ProjectsLive } from "@/features/project/layer/project.layer.live";
 
 /**
  * Single long-lived server runtime. All route handlers run their effects

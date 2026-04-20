@@ -1,17 +1,19 @@
 import { Layer } from "effect"
-import { createMysqlStorageLayer } from "@/lib/effect/layers/storage/storage.mysql"
-import { db } from "@/lib/db/client"
-import { refreshTokens, users } from "@/lib/db/schema"
-import type { RefreshTokenRecord, UserRecord } from "./auth.model"
-import { RequestUserResolverLive } from "./auth.http"
+import {
+  RefreshTokenRepository,
+  UserRepository,
+} from "@/features/auth/repository/auth.repository"
+import {
+  mysqlRefreshTokenRepository,
+  mysqlUserRepository,
+} from "@/features/auth/repository/auth.repository.mysql"
+import { RequestUserResolverLive } from "@/features/auth/auth.http"
 import {
   Auth,
   JwtExpiresIn,
   JwtSecret,
-  RefreshTokenStorage,
   RefreshTokenTtlSeconds,
-  UserStorage,
-} from "./auth.service"
+} from "@/features/auth/service/auth.service"
 
 const secret = process.env.AUTH_SECRET
 if (!secret) {
@@ -26,14 +28,8 @@ const encodedSecret = new TextEncoder().encode(secret)
 export const AuthLive = Auth.Default.pipe(
   Layer.provide(
     Layer.mergeAll(
-      Layer.succeed(
-        UserStorage,
-        createMysqlStorageLayer<UserRecord>(db, users),
-      ),
-      Layer.succeed(
-        RefreshTokenStorage,
-        createMysqlStorageLayer<RefreshTokenRecord>(db, refreshTokens),
-      ),
+      Layer.succeed(UserRepository, mysqlUserRepository),
+      Layer.succeed(RefreshTokenRepository, mysqlRefreshTokenRepository),
       Layer.succeed(JwtSecret, encodedSecret),
       Layer.succeed(
         JwtExpiresIn,

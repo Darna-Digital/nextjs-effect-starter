@@ -2,8 +2,8 @@
 
 import { useForm } from "react-hook-form"
 import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver"
-import { LoginSchema, RegisterSchema } from "../../auth.requests"
-import type { Login, Register } from "../../auth.requests"
+import { LoginSchema, RegisterSchema } from "@/features/auth/schema/auth.schema.requests"
+import type { Login, Register } from "@/features/auth/schema/auth.schema.requests"
 import type { AuthFieldError } from "../hooks/use-auth"
 
 type Mode = "login" | "register"

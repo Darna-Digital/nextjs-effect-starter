@@ -7,7 +7,7 @@ import {
   parseAuthError,
   useLogin,
 } from "@/features/auth/presentation/hooks/use-auth"
-import type { Login } from "@/features/auth/auth.requests"
+import type { Login } from "@/features/auth/schema/auth.schema.requests"
 
 export default function LoginPage() {
   const router = useRouter()

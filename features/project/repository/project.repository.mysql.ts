@@ -2,9 +2,9 @@ import { Effect } from "effect"
 import { and, eq } from "drizzle-orm"
 import { db } from "@/lib/db/client"
 import { projects } from "@/lib/db/schema"
-import { StorageError } from "@/lib/effect/layers/storage/storage.base"
-import { ProjectNotFound, type Project } from "./project.model"
-import type { ProjectRepo } from "./project.repository"
+import { StorageError } from "@/lib/effect/layers/storage"
+import { ProjectNotFound, type Project } from "@/features/project/schema/project.schema.model"
+import type { ProjectRepo } from "@/features/project/repository/project.repository"
 
 const tryDb = <A>(run: () => Promise<A>) =>
   Effect.tryPromise({ try: run, catch: (cause) => new StorageError({ cause }) })

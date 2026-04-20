@@ -2,8 +2,8 @@ import { Data, Schema as S } from "effect"
 import {
   OrganizationId,
   type Organization,
-} from "@/features/organization/organization.model"
-import { UserId } from "@/features/auth/auth.model"
+} from "@/features/organization/schema/organization.schema.model"
+import { UserId } from "@/features/auth/schema/auth.schema.model"
 
 export const ProjectId = S.String.pipe(S.brand("ProjectId"))
 export type ProjectId = typeof ProjectId.Type

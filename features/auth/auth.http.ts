@@ -6,8 +6,8 @@ import {
   NotAuthenticated,
   RefreshTokenExpired,
   type PublicUser,
-} from "./auth.model"
-import { Auth } from "./auth.service"
+} from "@/features/auth/schema/auth.schema.model"
+import { Auth } from "@/features/auth/service/auth.service"
 
 /**
  * The auth feature's HTTP boundary — everything between `Auth` (pure business

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest"
 import { Effect, Either, Layer } from "effect"
 import { scryptSync } from "node:crypto"
-import { Auth } from "./auth.service"
-import { AuthMemory } from "./auth.layers.memory"
+import { Auth } from "@/features/auth/service/auth.service"
+import { AuthMemory } from "@/features/auth/layer/auth.layer.memory"
 import type {
   RefreshTokenRecord,
   UserId,
   UserRecord,
-} from "./auth.model"
+} from "@/features/auth/schema/auth.schema.model"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Test helpers

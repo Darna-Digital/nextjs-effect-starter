@@ -4,8 +4,8 @@ import { requireUser } from "@/features/auth/auth.http"
 import {
   CreateProjectSchema,
   ListProjectsQuerySchema,
-} from "@/features/project/project.requests"
-import { Projects } from "@/features/project/project.service"
+} from "@/features/project/schema/project.schema.requests"
+import { Projects } from "@/features/project/service/project.service"
 
 export const GET = apiRoute({
   span: "GET /api/projects",

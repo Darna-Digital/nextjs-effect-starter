@@ -5,7 +5,7 @@ import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
 import {
   CreateOrganizationSchema,
   type CreateOrganization,
-} from "../../organization.requests";
+} from "@/features/organization/schema/organization.schema.requests";
 import type { OrganizationFieldError } from "../hooks/use-organizations";
 
 interface OrganizationFormProps {

@@ -1,14 +1,22 @@
 import { Layer } from "effect"
-import { createMemoryStorageLayer } from "@/lib/effect/layers/storage/storage.memory"
-import type { RefreshTokenRecord, UserRecord } from "./auth.model"
+import {
+  RefreshTokenRepository,
+  UserRepository,
+} from "@/features/auth/repository/auth.repository"
+import {
+  createMemoryRefreshTokenRepository,
+  createMemoryUserRepository,
+} from "@/features/auth/repository/auth.repository.memory"
+import type {
+  RefreshTokenRecord,
+  UserRecord,
+} from "@/features/auth/schema/auth.schema.model"
 import {
   Auth,
   JwtExpiresIn,
   JwtSecret,
-  RefreshTokenStorage,
   RefreshTokenTtlSeconds,
-  UserStorage,
-} from "./auth.service"
+} from "@/features/auth/service/auth.service"
 
 /** Test-only HS256 secret (must be ≥32 bytes). */
 const DEFAULT_TEST_SECRET = new TextEncoder().encode(
@@ -38,13 +46,10 @@ export const AuthMemory = ({
   Auth.Default.pipe(
     Layer.provide(
       Layer.mergeAll(
+        Layer.effect(UserRepository, createMemoryUserRepository(seedUsers)),
         Layer.effect(
-          UserStorage,
-          createMemoryStorageLayer<UserRecord>([...seedUsers]),
-        ),
-        Layer.effect(
-          RefreshTokenStorage,
-          createMemoryStorageLayer<RefreshTokenRecord>([...seedRefreshTokens]),
+          RefreshTokenRepository,
+          createMemoryRefreshTokenRepository(seedRefreshTokens),
         ),
         Layer.succeed(JwtSecret, secret),
         Layer.succeed(JwtExpiresIn, accessTtl),

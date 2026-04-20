@@ -1,9 +1,9 @@
 import { Effect, Schema as S } from "effect"
 import { apiRoute } from "@/lib/effect/http/api-route"
 import { requireUser } from "@/features/auth/auth.http"
-import { OrganizationId } from "@/features/organization/organization.model"
-import { UpdateOrganizationSchema } from "@/features/organization/organization.requests"
-import { Organizations } from "@/features/organization/organization.service"
+import { OrganizationId } from "@/features/organization/schema/organization.schema.model"
+import { UpdateOrganizationSchema } from "@/features/organization/schema/organization.schema.requests"
+import { Organizations } from "@/features/organization/service/organization.service"
 
 const Params = S.Struct({ id: OrganizationId })
 

@@ -1,45 +1,36 @@
 import { Schema as S } from "effect"
-import { UserId } from "@/features/auth/auth.model"
-import { OrganizationId } from "@/features/organization/organization.model"
-import { ProjectName } from "./project.model"
+import { OrganizationName } from "@/features/organization/schema/organization.schema.model"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inputs — request payloads decoded at the HTTP edge
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const CreateProjectSchema = S.Struct({
-  name: ProjectName,
-  description: S.optional(S.String),
-  organizationId: OrganizationId,
-})
-export type CreateProject = typeof CreateProjectSchema.Type
-
-export const UpdateProjectSchema = S.Struct({
-  name: S.optional(ProjectName),
+export const CreateOrganizationSchema = S.Struct({
+  name: OrganizationName,
   description: S.optional(S.String),
 })
-export type UpdateProject = typeof UpdateProjectSchema.Type
+export type CreateOrganization = typeof CreateOrganizationSchema.Type
 
-/**
- * Query string for `GET /api/projects`. Both fields optional — empty query
- * means "everything I'm allowed to see." Decoded from raw `Record<string,
- * string>` produced by `URLSearchParams`.
- */
-export const ListProjectsQuerySchema = S.Struct({
-  ownerId: S.optional(UserId),
-  organizationId: S.optional(OrganizationId),
+export const UpdateOrganizationSchema = S.Struct({
+  name: S.optional(OrganizationName),
+  description: S.optional(S.String),
 })
-export type ListProjectsQuery = typeof ListProjectsQuerySchema.Type
+export type UpdateOrganization = typeof UpdateOrganizationSchema.Type
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Wire error shape — `"Not found"` covers both project and organization
-// not-found cases (the server uses the same string for both because the
-// frontend renders them the same way).
+// Wire error shape — consumed by the client via composable-fetcher's
+// `errorSchema` so the frontend sees a typed, discriminated union.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const ProjectApiErrorSchema = S.Union(
+export const OrganizationApiErrorSchema = S.Union(
+  S.Struct({ error: S.Literal("Name already taken"), name: S.String }),
+  S.Struct({ error: S.Literal("Name is reserved"), name: S.String }),
   S.Struct({ error: S.Literal("Not found"), id: S.String }),
+  S.Struct({
+    error: S.Literal("Organization has dependent projects"),
+    id: S.String,
+  }),
   S.Struct({ error: S.Literal("Validation failed"), details: S.String }),
   S.Struct({ error: S.Literal("Storage error"), cause: S.String }),
 )
-export type ProjectApiError = typeof ProjectApiErrorSchema.Type
+export type OrganizationApiError = typeof OrganizationApiErrorSchema.Type

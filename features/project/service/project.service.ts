@@ -1,13 +1,13 @@
 import { Effect } from "effect"
 import { CurrentUser } from "@/lib/effect/layers/auth"
-import type { UserId } from "@/features/auth/auth.model"
-import { Organizations } from "@/features/organization/organization.service"
-import { type ProjectId } from "./project.model"
+import type { UserId } from "@/features/auth/schema/auth.schema.model"
+import { Organizations } from "@/features/organization/service/organization.service"
+import { type ProjectId } from "@/features/project/schema/project.schema.model"
 import {
   ProjectRepository,
   type ProjectFilter,
-} from "./project.repository"
-import type { CreateProject, UpdateProject } from "./project.requests"
+} from "@/features/project/repository/project.repository"
+import type { CreateProject, UpdateProject } from "@/features/project/schema/project.schema.requests"
 
 /**
  * Projects service.

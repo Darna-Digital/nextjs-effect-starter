@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { Effect, Either } from "effect";
-import { Organizations } from "./organization.service";
-import { OrganizationsMemory } from "./organization.layers.memory";
-import type { Organization, OrganizationId } from "./organization.model";
+import { Organizations } from "@/features/organization/service/organization.service";
+import { OrganizationsMemory } from "@/features/organization/layer/organization.layer.memory";
+import type { Organization, OrganizationId } from "@/features/organization/schema/organization.schema.model";
 
 /** Run a program with a fresh in-memory org service, return Either. */
 const run = <A, E>(

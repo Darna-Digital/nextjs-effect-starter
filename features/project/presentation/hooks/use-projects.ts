@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Match, Schema as S } from "effect"
 import { getFetchError } from "@darna-digital/composable-fetcher"
 import { apiClient } from "@/features/auth/presentation/api-client"
-import { ProjectSchema, type ProjectId } from "../../project.model"
+import { ProjectSchema, type ProjectId } from "@/features/project/schema/project.schema.model"
 import {
   CreateProjectSchema,
   UpdateProjectSchema,
@@ -12,7 +12,7 @@ import {
   type CreateProject,
   type UpdateProject,
   type ProjectApiError,
-} from "../../project.requests"
+} from "@/features/project/schema/project.schema.requests"
 
 const QUERY_KEY = ["projects"] as const
 

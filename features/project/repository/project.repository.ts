@@ -1,11 +1,11 @@
 import { Context, Effect } from "effect"
-import type { UserId } from "@/features/auth/auth.model"
-import type { OrganizationId } from "@/features/organization/organization.model"
+import type { UserId } from "@/features/auth/schema/auth.schema.model"
+import type { OrganizationId } from "@/features/organization/schema/organization.schema.model"
 import {
   StorageError,
   type Patch,
-} from "@/lib/effect/layers/storage/storage.base"
-import { ProjectNotFound, type Project, type ProjectId } from "./project.model"
+} from "@/lib/effect/layers/storage"
+import { ProjectNotFound, type Project, type ProjectId } from "@/features/project/schema/project.schema.model"
 
 /**
  * Project-specific repository — replaces the generic `Storage<T>`. Tailored

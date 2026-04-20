@@ -1,6 +1,6 @@
 "use client"
 
-import type { Organization } from "@/features/organization/organization.model"
+import type { Organization } from "@/features/organization/schema/organization.schema.model"
 
 /**
  * Filter state for `useProjects`. Mirrors `ListProjectsQuerySchema` on the

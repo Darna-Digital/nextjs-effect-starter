@@ -1,23 +1,16 @@
 import { Context, Effect } from "effect"
-import type { Storage } from "@/lib/effect/layers/storage/storage.base"
+import { OrganizationRepository } from "@/features/organization/repository/organization.repository"
 import {
-  OrganizationInUse,
-  OrganizationNotFound,
   OrganizationNameReserved,
   OrganizationNameTaken,
-  type Organization,
   type OrganizationId,
-} from "./organization.model"
+} from "@/features/organization/schema/organization.schema.model"
 import type {
   CreateOrganization,
   UpdateOrganization,
-} from "./organization.requests"
+} from "@/features/organization/schema/organization.schema.requests"
 
-export class OrganizationStorage extends Context.Tag("OrganizationStorage")<
-  OrganizationStorage,
-  Storage<Organization>
->() {}
-
+/** Reserved names that can't be used by tenants (config tag, not storage). */
 export class ReservedOrganizationNames extends Context.Tag(
   "ReservedOrganizationNames",
 )<ReservedOrganizationNames, readonly string[]>() {}
@@ -26,19 +19,17 @@ export class ReservedOrganizationNames extends Context.Tag(
  * The organization service. Rails-style call sites:
  *
  *     yield* Organizations.create({ name: "Acme" })
- *     yield* Organizations.getAll()
+ *     yield* Organizations.list()
  *
- * Storage errors (`EntityNotFound`, `EntityInUse`) are translated to
- * domain errors at each call site via `Effect.catchTag` / `catchTags`.
- * Inline because TypeScript only infers the `Id` brand when the source
- * effect is concrete in the pipe chain.
+ * The repository emits domain errors (`OrganizationNotFound`,
+ * `OrganizationInUse`) directly — no translation ceremony here.
  */
 export class Organizations extends Effect.Service<Organizations>()(
   "Organizations",
   {
     accessors: true,
     effect: Effect.gen(function* () {
-      const storage = yield* OrganizationStorage
+      const repo = yield* OrganizationRepository
       const reserved = yield* ReservedOrganizationNames
 
       const assertNotReserved = (name: string) =>
@@ -51,7 +42,7 @@ export class Organizations extends Effect.Service<Organizations>()(
         ignoreId?: OrganizationId,
       ) =>
         Effect.gen(function* () {
-          const all = yield* storage.getAll()
+          const all = yield* repo.list()
           const conflict = all.find(
             (o) =>
               o.id !== ignoreId &&
@@ -62,14 +53,14 @@ export class Organizations extends Effect.Service<Organizations>()(
         })
 
       return {
+        list: () => repo.list().pipe(Effect.withSpan("Organizations.list")),
+
+        /** @deprecated use `list()` — kept for existing callers. */
         getAll: () =>
-          storage.getAll().pipe(Effect.withSpan("Organizations.getAll")),
+          repo.list().pipe(Effect.withSpan("Organizations.getAll")),
 
         getById: (id: OrganizationId) =>
-          storage.getById(id).pipe(
-            Effect.catchTag("EntityNotFound", (e) =>
-              Effect.fail(new OrganizationNotFound({ id: e.id })),
-            ),
+          repo.get(id).pipe(
             Effect.withSpan("Organizations.getById", {
               attributes: { "organization.id": id },
             }),
@@ -79,7 +70,7 @@ export class Organizations extends Effect.Service<Organizations>()(
           Effect.gen(function* () {
             yield* assertNotReserved(input.name)
             yield* assertNameAvailable(input.name)
-            return yield* storage.create({
+            return yield* repo.create({
               id: crypto.randomUUID() as OrganizationId,
               ...input,
             })
@@ -95,11 +86,7 @@ export class Organizations extends Effect.Service<Organizations>()(
               yield* assertNotReserved(input.name)
               yield* assertNameAvailable(input.name, id)
             }
-            return yield* storage.update(id, input).pipe(
-              Effect.catchTag("EntityNotFound", (e) =>
-                Effect.fail(new OrganizationNotFound({ id: e.id })),
-              ),
-            )
+            return yield* repo.update(id, input)
           }).pipe(
             Effect.withSpan("Organizations.update", {
               attributes: { "organization.id": id },
@@ -107,13 +94,7 @@ export class Organizations extends Effect.Service<Organizations>()(
           ),
 
         remove: (id: OrganizationId) =>
-          storage.remove(id).pipe(
-            Effect.catchTags({
-              EntityNotFound: (e) =>
-                Effect.fail(new OrganizationNotFound({ id: e.id })),
-              EntityInUse: (e) =>
-                Effect.fail(new OrganizationInUse({ id: e.id })),
-            }),
+          repo.remove(id).pipe(
             Effect.withSpan("Organizations.remove", {
               attributes: { "organization.id": id },
             }),

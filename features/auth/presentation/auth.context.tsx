@@ -8,7 +8,7 @@ import {
   useState,
 } from "react"
 import { Schema as S } from "effect"
-import { PublicUserSchema, type PublicUser } from "../auth.model"
+import { PublicUserSchema, type PublicUser } from "@/features/auth/schema/auth.schema.model"
 import { apiClient, registerUnauthenticatedHandler } from "./api-client"
 
 const meSchema = S.standardSchemaV1(S.Struct({ user: PublicUserSchema }))

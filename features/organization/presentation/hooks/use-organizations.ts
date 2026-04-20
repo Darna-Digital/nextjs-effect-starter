@@ -10,7 +10,7 @@ import { apiClient } from "@/features/auth/presentation/api-client";
 import {
   OrganizationSchema,
   type OrganizationId,
-} from "../../organization.model";
+} from "@/features/organization/schema/organization.schema.model";
 import {
   CreateOrganizationSchema,
   UpdateOrganizationSchema,
@@ -18,7 +18,7 @@ import {
   type OrganizationApiError,
   type CreateOrganization,
   type UpdateOrganization,
-} from "../../organization.requests";
+} from "@/features/organization/schema/organization.schema.requests";
 
 const QUERY_KEY = ["organizations"] as const;
 

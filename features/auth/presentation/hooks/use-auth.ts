@@ -15,7 +15,7 @@ import {
   type AuthSession,
   type Login,
   type Register,
-} from "../../auth.requests"
+} from "@/features/auth/schema/auth.schema.requests"
 import { apiClient } from "../api-client"
 import { useAuthContext } from "../auth.context"
 

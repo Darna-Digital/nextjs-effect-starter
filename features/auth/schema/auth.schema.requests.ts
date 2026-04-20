@@ -1,5 +1,5 @@
 import { Schema as S } from "effect"
-import { Email, Password, PublicUserSchema } from "./auth.model"
+import { Email, Password, PublicUserSchema } from "@/features/auth/schema/auth.schema.model"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inputs — request payloads decoded at the HTTP edge

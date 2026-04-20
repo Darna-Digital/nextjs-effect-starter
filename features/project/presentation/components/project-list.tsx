@@ -1,7 +1,7 @@
 "use client"
 
-import type { Project, ProjectId } from "../../project.model"
-import type { Organization } from "@/features/organization/organization.model"
+import type { Project, ProjectId } from "@/features/project/schema/project.schema.model"
+import type { Organization } from "@/features/organization/schema/organization.schema.model"
 import { useCurrentUser } from "@/features/auth/presentation/hooks/use-auth"
 
 interface ProjectListProps {
