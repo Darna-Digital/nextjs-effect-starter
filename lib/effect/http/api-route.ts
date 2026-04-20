@@ -3,7 +3,14 @@ import { ParseError } from "effect/ParseResult"
 import { AppRuntime } from "@/lib/effect/layers/runtime"
 import { CurrentUser } from "@/lib/effect/layers/auth"
 import { RequestUserResolver } from "@/lib/effect/http/request-user"
-import { enforceRateLimit, type RateLimitConfig } from "@/lib/rate-limit"
+import { RateLimiter, type RateLimitConfig } from "@/lib/effect/layers/rate-limit"
+
+/** `X-Forwarded-For` first hop, then `X-Real-IP`, else `"unknown"`. */
+const clientIp = (request: Request): string => {
+  const xff = request.headers.get("x-forwarded-for")
+  if (xff) return xff.split(",")[0].trim()
+  return request.headers.get("x-real-ip") ?? "unknown"
+}
 
 /**
  * Contract for errors that render themselves as HTTP responses.
@@ -87,8 +94,15 @@ export function apiRoute<
     const rawQuery = Object.fromEntries(url.searchParams)
 
     const program = Effect.gen(function* () {
-      if (config.rateLimit)
-        yield* enforceRateLimit(request, config.rateLimit)
+      if (config.rateLimit) {
+        const limiter = yield* RateLimiter
+        yield* limiter.check({
+          ...config.rateLimit,
+          // Scope the bucket per-IP at the edge so the service stays
+          // transport-agnostic.
+          key: `${config.rateLimit.key}:${clientIp(request)}`,
+        })
+      }
 
       const resolver = yield* RequestUserResolver
       const user = yield* resolver.resolve(request)

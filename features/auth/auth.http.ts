@@ -1,6 +1,6 @@
 import { Effect, Layer } from "effect"
 import { cookies } from "next/headers"
-import { config } from "@/lib/config"
+import { config } from "@/lib/effect/config"
 import { RequestUserResolver } from "@/lib/effect/http/request-user"
 import { CurrentUser, type User } from "@/lib/effect/layers/auth"
 import {

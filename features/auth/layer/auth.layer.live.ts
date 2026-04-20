@@ -1,5 +1,5 @@
 import { Layer } from "effect"
-import { config } from "@/lib/config"
+import { config } from "@/lib/effect/config"
 import {
   RefreshTokenRepository,
   UserRepository,

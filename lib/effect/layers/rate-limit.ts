@@ -1,0 +1,107 @@
+import {
+  Clock,
+  Context,
+  Data,
+  Effect,
+  HashMap,
+  Layer,
+  Option,
+  Ref,
+} from "effect"
+
+/**
+ * Fail-fast HTTP rate limiter, Effect-native.
+ *
+ * Why not `effect/RateLimiter`? That one **throttles** — it queues the
+ * effect until a token is free. For HTTP we want the opposite: reject
+ * immediately with 429 + `Retry-After`. This module is a fixed-window
+ * counter built from the same primitives the stdlib uses (`Ref`,
+ * `HashMap`, `Clock`), exposed as a `Context.Tag` so `AppRuntime` wires
+ * it like any other service and a Redis-backed replacement drops in
+ * without touching callers.
+ */
+
+export class TooManyRequests extends Data.TaggedError("TooManyRequests")<{
+  readonly retryAfter: number
+}> {
+  toResponse(): Response {
+    return Response.json(
+      { error: "Too many requests", retryAfter: this.retryAfter },
+      { status: 429, headers: { "Retry-After": String(this.retryAfter) } },
+    )
+  }
+}
+
+export interface RateLimitConfig {
+  /** Logical bucket name — usually the route, scoped per-IP at the edge. */
+  readonly key: string
+  /** Max requests allowed within the window. */
+  readonly max: number
+  /** Window size in milliseconds. */
+  readonly windowMs: number
+}
+
+type Bucket = { readonly count: number; readonly resetAt: number }
+
+export class RateLimiter extends Context.Tag("RateLimiter")<
+  RateLimiter,
+  {
+    readonly check: (
+      config: RateLimitConfig,
+    ) => Effect.Effect<void, TooManyRequests>
+  }
+>() {}
+
+/**
+ * In-process `RateLimiter`. Per-instance (one Node process); swap in a
+ * shared-store impl when you scale out.
+ */
+export const RateLimiterLive = Layer.effect(
+  RateLimiter,
+  Effect.gen(function* () {
+    const buckets = yield* Ref.make(HashMap.empty<string, Bucket>())
+
+    return {
+      check: ({ key, max, windowMs }) =>
+        Effect.gen(function* () {
+          const now = yield* Clock.currentTimeMillis
+
+          const retryAfter = yield* Ref.modify(
+            buckets,
+            (map): [number, HashMap.HashMap<string, Bucket>] => {
+              const existing = HashMap.get(map, key)
+
+              // Window expired or brand-new key → start a fresh window.
+              if (Option.isNone(existing) || existing.value.resetAt < now) {
+                return [
+                  0,
+                  HashMap.set(map, key, {
+                    count: 1,
+                    resetAt: now + windowMs,
+                  }),
+                ]
+              }
+
+              const bucket = existing.value
+              if (bucket.count >= max) {
+                const secs = Math.max(1, Math.ceil((bucket.resetAt - now) / 1000))
+                return [secs, map]
+              }
+
+              return [
+                0,
+                HashMap.set(map, key, {
+                  count: bucket.count + 1,
+                  resetAt: bucket.resetAt,
+                }),
+              ]
+            },
+          )
+
+          if (retryAfter > 0) {
+            return yield* Effect.fail(new TooManyRequests({ retryAfter }))
+          }
+        }),
+    }
+  }),
+)

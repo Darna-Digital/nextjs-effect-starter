@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/mysql2"
 import mysql from "mysql2/promise"
-import { config } from "@/lib/config"
+import { config } from "@/lib/effect/config"
 import * as schema from "./schema"
 
 /**

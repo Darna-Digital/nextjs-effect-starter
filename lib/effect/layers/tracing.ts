@@ -1,7 +1,7 @@
 import { OtlpTracer, OtlpSerialization } from "@effect/opentelemetry"
 import { NodeHttpClient } from "@effect/platform-node"
 import { Layer } from "effect"
-import { config } from "@/lib/config"
+import { config } from "@/lib/effect/config"
 
 /**
  * OTLP tracing — only enabled when `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
