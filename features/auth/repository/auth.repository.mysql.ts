@@ -2,7 +2,7 @@ import { Effect } from "effect"
 import { eq, sql } from "drizzle-orm"
 import { db } from "@/lib/db/client"
 import { refreshTokens, users } from "@/lib/db/schema"
-import { StorageError, tryDb } from "@/lib/effect/layers/storage"
+import { DB_SPAN_ATTRS, StorageError, tryDb } from "@/lib/effect/layers/storage"
 import {
   RefreshTokenExpired,
   type RefreshTokenRecord,
@@ -19,7 +19,7 @@ import type {
 
 export const mysqlUserRepository: UserRepo = {
   findByEmail: (email) =>
-    tryDb(() =>
+    tryDb("mysql.users.findByEmail", () =>
       db
         .select()
         .from(users)
@@ -33,15 +33,17 @@ export const mysqlUserRepository: UserRepo = {
     ),
 
   get: (id) =>
-    tryDb(() =>
+    tryDb("mysql.users.get", () =>
       db.select().from(users).where(eq(users.id, id)).limit(1),
     ).pipe(
       Effect.map((rows) => (rows[0] as UserRecord | undefined) ?? null),
     ),
 
   create: (user) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tryDb(() => db.insert(users).values(user as any)).pipe(Effect.as(user)),
+    tryDb("mysql.users.insert", () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      db.insert(users).values(user as any),
+    ).pipe(Effect.as(user)),
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,13 +52,13 @@ export const mysqlUserRepository: UserRepo = {
 
 export const mysqlRefreshTokenRepository: RefreshTokenRepo = {
   create: (record) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tryDb(() => db.insert(refreshTokens).values(record as any)).pipe(
-      Effect.as(record),
-    ),
+    tryDb("mysql.refresh_tokens.insert", () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      db.insert(refreshTokens).values(record as any),
+    ).pipe(Effect.as(record)),
 
   get: (id) =>
-    tryDb(() =>
+    tryDb("mysql.refresh_tokens.get", () =>
       db
         .select()
         .from(refreshTokens)
@@ -69,7 +71,7 @@ export const mysqlRefreshTokenRepository: RefreshTokenRepo = {
     ),
 
   remove: (id) =>
-    tryDb(() =>
+    tryDb("mysql.refresh_tokens.delete", () =>
       db.delete(refreshTokens).where(eq(refreshTokens.id, id)),
     ).pipe(Effect.asVoid),
 
@@ -92,5 +94,11 @@ export const mysqlRefreshTokenRepository: RefreshTokenRepo = {
         cause instanceof RefreshTokenExpired
           ? cause
           : new StorageError({ cause }),
-    }).pipe(Effect.asVoid),
+    })
+      .pipe(
+        Effect.withSpan("mysql.refresh_tokens.rotate", {
+          attributes: DB_SPAN_ATTRS,
+        }),
+      )
+      .pipe(Effect.asVoid),
 }

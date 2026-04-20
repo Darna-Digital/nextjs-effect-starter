@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm"
 import { db } from "@/lib/db/client"
 import { organizations } from "@/lib/db/schema"
 import {
+  DB_SPAN_ATTRS,
   StorageError,
   isFkReferencedError,
   isUniqueViolationError,
@@ -18,13 +19,15 @@ import {
 import type { OrganizationRepo } from "@/features/organization/repository/organization.repository"
 
 const findOne = (id: Organization["id"]) =>
-  tryDb(() =>
+  tryDb("mysql.organizations.findOne", () =>
     db.select().from(organizations).where(eq(organizations.id, id)).limit(1),
   ).pipe(Effect.map((rows) => (rows[0] as Record<string, unknown>) ?? null))
 
 export const mysqlOrganizationRepository: OrganizationRepo = {
   list: () =>
-    tryDb(() => db.select().from(organizations)).pipe(
+    tryDb("mysql.organizations.list", () =>
+      db.select().from(organizations),
+    ).pipe(
       Effect.map((rows) =>
         (rows as Record<string, unknown>[]).map(stripNulls<Organization>),
       ),
@@ -49,7 +52,13 @@ export const mysqlOrganizationRepository: OrganizationRepo = {
         isUniqueViolationError(cause)
           ? new OrganizationNameTaken({ name: org.name })
           : new StorageError({ cause }),
-    }).pipe(Effect.as(org)),
+    })
+      .pipe(
+        Effect.withSpan("mysql.organizations.insert", {
+          attributes: DB_SPAN_ATTRS,
+        }),
+      )
+      .pipe(Effect.as(org)),
 
   update: (id, patch) =>
     Effect.gen(function* () {
@@ -67,7 +76,11 @@ export const mysqlOrganizationRepository: OrganizationRepo = {
           isUniqueViolationError(cause) && typeof patch.name === "string"
             ? new OrganizationNameTaken({ name: patch.name })
             : new StorageError({ cause }),
-      })
+      }).pipe(
+        Effect.withSpan("mysql.organizations.update", {
+          attributes: DB_SPAN_ATTRS,
+        }),
+      )
       const updated = yield* findOne(id)
       return stripNulls<Organization>(updated as Record<string, unknown>)
     }),
@@ -84,6 +97,10 @@ export const mysqlOrganizationRepository: OrganizationRepo = {
           isFkReferencedError(cause)
             ? new OrganizationInUse({ id })
             : new StorageError({ cause }),
-      })
+      }).pipe(
+        Effect.withSpan("mysql.organizations.delete", {
+          attributes: DB_SPAN_ATTRS,
+        }),
+      )
     }),
 }

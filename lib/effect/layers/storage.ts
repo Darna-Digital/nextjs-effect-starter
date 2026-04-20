@@ -32,9 +32,23 @@ export type Patch<T> = {
   [K in keyof Omit<T, "id">]?: Omit<T, "id">[K] | undefined
 }
 
-/** Runs a DB promise, mapping any rejection into `StorageError`. */
-export const tryDb = <A>(run: () => Promise<A>) =>
-  Effect.tryPromise({ try: run, catch: (cause) => new StorageError({ cause }) })
+/**
+ * Semantic-conventions-ish attributes applied to every DB span, so the
+ * trace UI groups queries the same way regardless of which repo emitted
+ * them. Add `db.operation` / `db.sql.table` per call when useful.
+ */
+export const DB_SPAN_ATTRS = { "db.system": "mysql" } as const
+
+/**
+ * Runs a DB promise, mapping any rejection into `StorageError` and
+ * wrapping it in an OTel span. Name convention: `mysql.<table>.<operation>`
+ * (e.g. `mysql.projects.list`, `mysql.refresh_tokens.rotate`).
+ */
+export const tryDb = <A>(name: string, run: () => Promise<A>) =>
+  Effect.tryPromise({
+    try: run,
+    catch: (cause) => new StorageError({ cause }),
+  }).pipe(Effect.withSpan(name, { attributes: DB_SPAN_ATTRS }))
 
 /**
  * Drizzle returns `null` for absent nullable columns; our schemas use

@@ -7,17 +7,17 @@ import { ProjectNotFound, type Project } from "@/features/project/schema/project
 import type { ProjectRepo } from "@/features/project/repository/project.repository"
 
 const findOne = (id: Project["id"]) =>
-  tryDb(() =>
+  tryDb("mysql.projects.findOne", () =>
     db.select().from(projects).where(eq(projects.id, id)).limit(1),
   ).pipe(Effect.map((rows) => (rows[0] as Record<string, unknown>) ?? null))
 
 /**
- * MySQL-backed `ProjectRepository`. Filtering is pushed down to SQL so
- * large tables don't force the server to fetch-then-filter.
+ * MySQL-backed `ProjectRepository`. Every query is wrapped in an OTel
+ * span so traces show the database hop, not just the service call.
  */
 export const mysqlProjectRepository: ProjectRepo = {
   list: (filter = {}) =>
-    tryDb(() => {
+    tryDb("mysql.projects.list", () => {
       const conditions = []
       if (filter.ownerId) conditions.push(eq(projects.ownerId, filter.ownerId))
       if (filter.organizationId)
@@ -42,16 +42,16 @@ export const mysqlProjectRepository: ProjectRepo = {
     }),
 
   create: (project) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tryDb(() => db.insert(projects).values(project as any)).pipe(
-      Effect.as(project),
-    ),
+    tryDb("mysql.projects.insert", () =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      db.insert(projects).values(project as any),
+    ).pipe(Effect.as(project)),
 
   update: (id, patch) =>
     Effect.gen(function* () {
       const existing = yield* findOne(id)
       if (!existing) return yield* Effect.fail(new ProjectNotFound({ id }))
-      yield* tryDb(() =>
+      yield* tryDb("mysql.projects.update", () =>
         db
           .update(projects)
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,6 +66,8 @@ export const mysqlProjectRepository: ProjectRepo = {
     Effect.gen(function* () {
       const existing = yield* findOne(id)
       if (!existing) return yield* Effect.fail(new ProjectNotFound({ id }))
-      yield* tryDb(() => db.delete(projects).where(eq(projects.id, id)))
+      yield* tryDb("mysql.projects.delete", () =>
+        db.delete(projects).where(eq(projects.id, id)),
+      )
     }),
 }
