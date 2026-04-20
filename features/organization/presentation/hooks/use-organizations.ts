@@ -157,6 +157,10 @@ const matchApiError = Match.type<OrganizationApiError>().pipe(
     message:
       "Can't delete: this organization still has projects. Delete those first, then try again.",
   })),
+  Match.discriminator("error")("Too many requests", (e) => ({
+    field: null,
+    message: `Too many requests — try again in ${e.retryAfter}s.`,
+  })),
   Match.discriminator("error")("Storage error", () => ({
     field: null,
     message: "Something went wrong on our side. Please try again.",

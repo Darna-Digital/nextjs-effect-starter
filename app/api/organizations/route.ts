@@ -9,7 +9,7 @@ export const GET = apiRoute({
   handle: () =>
     Effect.gen(function* () {
       yield* requireUser
-      return yield* Organizations.getAll()
+      return yield* Organizations.list()
     }),
 })
 

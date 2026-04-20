@@ -7,5 +7,6 @@ import { completeSession } from "@/features/auth/auth.http"
 export const POST = apiRoute({
   span: "POST /api/auth/login",
   body: LoginSchema,
+  rateLimit: { key: "auth:login", max: 10, windowMs: 60_000 },
   handle: ({ body }) => Auth.login(body).pipe(Effect.flatMap(completeSession)),
 })

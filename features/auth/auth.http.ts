@@ -1,5 +1,6 @@
 import { Effect, Layer } from "effect"
 import { cookies } from "next/headers"
+import { config } from "@/lib/config"
 import { RequestUserResolver } from "@/lib/effect/http/request-user"
 import { CurrentUser, type User } from "@/lib/effect/layers/auth"
 import {
@@ -29,17 +30,10 @@ const REFRESH_COOKIE = "refresh_token"
 
 /**
  * Persist the access cookie well past its JWT expiry. The server is the
- * source of truth — expired-JWT requests hit the refresh flow, not a silent
- * logout.
+ * source of truth — expired-JWT requests hit the refresh flow, not a
+ * silent logout.
  */
 const ACCESS_COOKIE_MAX_AGE = 7 * 24 * 60 * 60
-
-/** Matches the refresh-token TTL configured for the `Auth` service. */
-const REFRESH_COOKIE_MAX_AGE = Number(
-  process.env.AUTH_REFRESH_TOKEN_TTL_SECONDS ?? 7 * 24 * 60 * 60,
-)
-
-const isProd = () => process.env.NODE_ENV === "production"
 
 const setAuthCookies = (accessToken: string, refreshToken: string) =>
   Effect.promise(async () => {
@@ -47,16 +41,16 @@ const setAuthCookies = (accessToken: string, refreshToken: string) =>
     jar.set(ACCESS_COOKIE, accessToken, {
       httpOnly: true,
       sameSite: "lax",
-      secure: isProd(),
+      secure: config.isProduction,
       path: "/",
       maxAge: ACCESS_COOKIE_MAX_AGE,
     })
     jar.set(REFRESH_COOKIE, refreshToken, {
       httpOnly: true,
       sameSite: "lax",
-      secure: isProd(),
+      secure: config.isProduction,
       path: "/api/auth",
-      maxAge: REFRESH_COOKIE_MAX_AGE,
+      maxAge: config.refreshTokenTtlSeconds,
     })
   })
 

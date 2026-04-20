@@ -40,6 +40,7 @@ export type ListProjectsQuery = typeof ListProjectsQuerySchema.Type
 export const ProjectApiErrorSchema = S.Union(
   S.Struct({ error: S.Literal("Not found"), id: S.String }),
   S.Struct({ error: S.Literal("Validation failed"), details: S.String }),
-  S.Struct({ error: S.Literal("Storage error"), cause: S.String }),
+  S.Struct({ error: S.Literal("Too many requests"), retryAfter: S.Number }),
+  S.Struct({ error: S.Literal("Storage error") }),
 )
 export type ProjectApiError = typeof ProjectApiErrorSchema.Type

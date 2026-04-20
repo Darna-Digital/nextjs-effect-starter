@@ -31,6 +31,7 @@ export const OrganizationApiErrorSchema = S.Union(
     id: S.String,
   }),
   S.Struct({ error: S.Literal("Validation failed"), details: S.String }),
-  S.Struct({ error: S.Literal("Storage error"), cause: S.String }),
+  S.Struct({ error: S.Literal("Too many requests"), retryAfter: S.Number }),
+  S.Struct({ error: S.Literal("Storage error") }),
 )
 export type OrganizationApiError = typeof OrganizationApiErrorSchema.Type

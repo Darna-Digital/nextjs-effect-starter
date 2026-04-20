@@ -21,7 +21,11 @@ import type { UserId } from "@/features/auth/schema/auth.schema.model"
 
 export const organizations = mysqlTable("organizations", {
   id: varchar("id", { length: 36 }).primaryKey().$type<OrganizationId>(),
-  name: varchar("name", { length: 255 }).notNull(),
+  // MySQL's default utf8mb4 collation is case-insensitive, so a UNIQUE
+  // index here rejects "Acme" vs "acme" at the DB level — the race-safe
+  // fallback if two concurrent creates slip past the service's pre-flight
+  // uniqueness check.
+  name: varchar("name", { length: 255 }).notNull().unique(),
   description: varchar("description", { length: 1024 }),
 })
 
@@ -59,10 +63,12 @@ export const users = mysqlTable("users", {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // refresh_tokens — one row per active session; rotated on each use.
-// The primary key IS the secret token value — no separate id column.
+// The primary key is sha256(secret_token); the raw secret only lives in
+// the user's cookie and in flight during rotation.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const refreshTokens = mysqlTable("refresh_tokens", {
+  // sha256 hex = 64 chars; leave headroom for future hash upgrades.
   id: varchar("id", { length: 128 }).primaryKey(),
   userId: varchar("user_id", { length: 36 })
     .notNull()

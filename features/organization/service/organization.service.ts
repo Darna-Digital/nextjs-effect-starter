@@ -55,10 +55,6 @@ export class Organizations extends Effect.Service<Organizations>()(
       return {
         list: () => repo.list().pipe(Effect.withSpan("Organizations.list")),
 
-        /** @deprecated use `list()` — kept for existing callers. */
-        getAll: () =>
-          repo.list().pipe(Effect.withSpan("Organizations.getAll")),
-
         getById: (id: OrganizationId) =>
           repo.get(id).pipe(
             Effect.withSpan("Organizations.getById", {

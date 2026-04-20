@@ -1,7 +1,8 @@
 import { Effect, Ref } from "effect"
-import type {
-  RefreshTokenRecord,
-  UserRecord,
+import {
+  RefreshTokenExpired,
+  type RefreshTokenRecord,
+  type UserRecord,
 } from "@/features/auth/schema/auth.schema.model"
 import type {
   RefreshTokenRepo,
@@ -58,6 +59,20 @@ export const createMemoryRefreshTokenRepository = (
         Ref.update(store, (items) => items.filter((r) => r.id !== id)).pipe(
           Effect.asVoid,
         ),
+
+      rotate: (oldId, newRecord) =>
+        Effect.gen(function* () {
+          const removed = yield* Ref.modify(store, (items) => {
+            const without = items.filter((r) => r.id !== oldId)
+            if (without.length === items.length) {
+              // oldId wasn't there — nothing to rotate.
+              return [false, items]
+            }
+            without.push(newRecord)
+            return [true, without]
+          })
+          if (!removed) return yield* Effect.fail(new RefreshTokenExpired())
+        }),
     }
 
     return repo

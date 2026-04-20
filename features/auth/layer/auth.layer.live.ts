@@ -1,4 +1,5 @@
 import { Layer } from "effect"
+import { config } from "@/lib/config"
 import {
   RefreshTokenRepository,
   UserRepository,
@@ -15,14 +16,7 @@ import {
   RefreshTokenTtlSeconds,
 } from "@/features/auth/service/auth.service"
 
-const secret = process.env.AUTH_SECRET
-if (!secret) {
-  throw new Error(
-    "AUTH_SECRET is not set. Add a long random string to .env.local.",
-  )
-}
-
-const encodedSecret = new TextEncoder().encode(secret)
+const encodedSecret = new TextEncoder().encode(config.authSecret)
 
 /** `Auth` backed by MySQL + HS256 JWTs + refresh rotation. */
 export const AuthLive = Auth.Default.pipe(
@@ -31,14 +25,8 @@ export const AuthLive = Auth.Default.pipe(
       Layer.succeed(UserRepository, mysqlUserRepository),
       Layer.succeed(RefreshTokenRepository, mysqlRefreshTokenRepository),
       Layer.succeed(JwtSecret, encodedSecret),
-      Layer.succeed(
-        JwtExpiresIn,
-        process.env.AUTH_ACCESS_TOKEN_EXPIRES_IN ?? "15m",
-      ),
-      Layer.succeed(
-        RefreshTokenTtlSeconds,
-        Number(process.env.AUTH_REFRESH_TOKEN_TTL_SECONDS ?? 7 * 24 * 60 * 60),
-      ),
+      Layer.succeed(JwtExpiresIn, config.accessTokenExpiresIn),
+      Layer.succeed(RefreshTokenTtlSeconds, config.refreshTokenTtlSeconds),
     ),
   ),
 )

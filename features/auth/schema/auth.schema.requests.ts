@@ -37,7 +37,9 @@ export const AuthApiErrorSchema = S.Union(
   S.Struct({ error: S.Literal("Not authenticated") }),
   S.Struct({ error: S.Literal("Refresh token expired or invalid") }),
   S.Struct({ error: S.Literal("Validation failed"), details: S.String }),
-  S.Struct({ error: S.Literal("Token signing failed"), cause: S.String }),
-  S.Struct({ error: S.Literal("Storage error"), cause: S.String }),
+  S.Struct({ error: S.Literal("Too many requests"), retryAfter: S.Number }),
+  // 5xx: no payload — internals are logged server-side, not surfaced.
+  S.Struct({ error: S.Literal("Token signing failed") }),
+  S.Struct({ error: S.Literal("Storage error") }),
 )
 export type AuthApiError = typeof AuthApiErrorSchema.Type

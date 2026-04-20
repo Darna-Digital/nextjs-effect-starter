@@ -2,23 +2,9 @@ import { Effect } from "effect"
 import { and, eq } from "drizzle-orm"
 import { db } from "@/lib/db/client"
 import { projects } from "@/lib/db/schema"
-import { StorageError } from "@/lib/effect/layers/storage"
+import { stripNulls, tryDb } from "@/lib/effect/layers/storage"
 import { ProjectNotFound, type Project } from "@/features/project/schema/project.schema.model"
 import type { ProjectRepo } from "@/features/project/repository/project.repository"
-
-const tryDb = <A>(run: () => Promise<A>) =>
-  Effect.tryPromise({ try: run, catch: (cause) => new StorageError({ cause }) })
-
-/**
- * Drizzle returns `null` for absent nullable columns; the domain uses
- * `S.optional(...)` (expects `undefined`). Strip nulls on read so the same
- * row shape works across storages.
- */
-const stripNulls = (row: Record<string, unknown>): Project => {
-  const out: Record<string, unknown> = {}
-  for (const key in row) if (row[key] !== null) out[key] = row[key]
-  return out as Project
-}
 
 const findOne = (id: Project["id"]) =>
   tryDb(() =>
@@ -26,8 +12,8 @@ const findOne = (id: Project["id"]) =>
   ).pipe(Effect.map((rows) => (rows[0] as Record<string, unknown>) ?? null))
 
 /**
- * MySQL-backed `ProjectRepository`. Push filtering down to SQL so large
- * tables don't force the server to fetch-then-filter.
+ * MySQL-backed `ProjectRepository`. Filtering is pushed down to SQL so
+ * large tables don't force the server to fetch-then-filter.
  */
 export const mysqlProjectRepository: ProjectRepo = {
   list: (filter = {}) =>
@@ -44,7 +30,7 @@ export const mysqlProjectRepository: ProjectRepo = {
         : db.select().from(projects)
     }).pipe(
       Effect.map((rows) =>
-        (rows as Record<string, unknown>[]).map(stripNulls),
+        (rows as Record<string, unknown>[]).map(stripNulls<Project>),
       ),
     ),
 
@@ -52,7 +38,7 @@ export const mysqlProjectRepository: ProjectRepo = {
     Effect.gen(function* () {
       const row = yield* findOne(id)
       if (!row) return yield* Effect.fail(new ProjectNotFound({ id }))
-      return stripNulls(row)
+      return stripNulls<Project>(row)
     }),
 
   create: (project) =>
@@ -73,7 +59,7 @@ export const mysqlProjectRepository: ProjectRepo = {
           .where(eq(projects.id, id)),
       )
       const updated = yield* findOne(id)
-      return stripNulls(updated as Record<string, unknown>)
+      return stripNulls<Project>(updated as Record<string, unknown>)
     }),
 
   remove: (id) =>

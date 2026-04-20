@@ -42,9 +42,10 @@ export const toPublicUser = (u: UserRecord): PublicUser => ({
 })
 
 /**
- * Persisted refresh-token row. `id` is the secret token value itself — no
- * separate column. Using the secret as the PK lets `Storage<T>` lookups
- * (`getById(token)`) do what we want without a custom storage interface.
+ * Persisted refresh-token row. `id` stores the **sha256 hash** of the
+ * secret token — the raw token only exists in the client's cookie and in
+ * flight during rotation. If the DB is ever dumped, no session can be
+ * hijacked from it.
  */
 export const RefreshTokenRecordSchema = S.Struct({
   id: S.String,
@@ -88,10 +89,8 @@ export class TokenSigningFailed extends Data.TaggedError("TokenSigningFailed")<{
   readonly cause: unknown
 }> {
   toResponse(): Response {
-    return Response.json(
-      { error: "Token signing failed", cause: String(this.cause) },
-      { status: 500 },
-    )
+    console.error("TokenSigningFailed", this.cause)
+    return Response.json({ error: "Token signing failed" }, { status: 500 })
   }
 }
 

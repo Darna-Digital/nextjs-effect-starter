@@ -124,6 +124,10 @@ const matchApiError = Match.type<ProjectApiError>().pipe(
     field: null,
     message: "Please check the form fields.",
   })),
+  Match.discriminator("error")("Too many requests", (e) => ({
+    field: null,
+    message: `Too many requests — try again in ${e.retryAfter}s.`,
+  })),
   Match.discriminator("error")("Storage error", () => ({
     field: null,
     message: "Something went wrong on our side. Please try again.",

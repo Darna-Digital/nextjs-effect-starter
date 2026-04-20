@@ -109,6 +109,10 @@ const matchApiError = Match.type<AuthApiError>().pipe(
     field: "email" as const,
     message: "Please check the form fields.",
   })),
+  Match.discriminator("error")("Too many requests", (e) => ({
+    field: null,
+    message: `Too many attempts — try again in ${e.retryAfter}s.`,
+  })),
   Match.discriminator("error")("Token signing failed", () => ({
     field: null,
     message: "Session could not be created. Please try again.",

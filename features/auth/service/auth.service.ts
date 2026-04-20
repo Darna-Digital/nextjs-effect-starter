@@ -1,4 +1,4 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto"
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from "node:crypto"
 import { Context, Effect } from "effect"
 import { SignJWT, jwtVerify } from "jose"
 import {
@@ -57,7 +57,18 @@ const verifyPassword = (password: string, stored: string): boolean => {
   return expected.length === actual.length && timingSafeEqual(expected, actual)
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Refresh-token helpers
+//
+// The raw token is 32 random bytes (64 hex chars). Only the sha256 digest
+// is stored; a DB dump can't hijack active sessions. No salt needed —
+// 256 bits of random entropy already rules out rainbow tables.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const generateRefreshToken = () => randomBytes(32).toString("hex")
+
+const hashRefreshToken = (raw: string) =>
+  createHash("sha256").update(raw).digest("hex")
 
 /**
  * Auth service. Owns user persistence, password hashing, JWTs, and refresh
@@ -70,9 +81,8 @@ const generateRefreshToken = () => randomBytes(32).toString("hex")
  *     yield* Auth.verifyToken(accessToken)       // → PublicUser
  *
  * The repositories return `null` for not-found cases; this service
- * translates those into meaningful domain errors
- * (`InvalidCredentials`, `RefreshTokenExpired`) at the right abstraction
- * layer.
+ * translates those into domain errors (`InvalidCredentials`,
+ * `RefreshTokenExpired`) at the right abstraction layer.
  */
 export class Auth extends Effect.Service<Auth>()("Auth", {
   accessors: true,
@@ -95,24 +105,27 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
         catch: (cause) => new TokenSigningFailed({ cause }),
       })
 
-    const issueRefreshToken = (userId: UserId) => {
-      const token = generateRefreshToken()
+    /** Build a fresh refresh-token record. Returns the raw token (for the
+     *  cookie) and the record (id = sha256(raw); never stored in plain). */
+    const mintRefreshToken = (userId: UserId) => {
+      const raw = generateRefreshToken()
       const record: RefreshTokenRecord = {
-        id: token,
+        id: hashRefreshToken(raw),
         userId,
         expiresAt: new Date(
           Date.now() + refreshTtlSeconds * 1000,
         ).toISOString(),
         createdAt: new Date().toISOString(),
       }
-      return refreshTokens.create(record).pipe(Effect.as(token))
+      return { raw, record }
     }
 
     const issueSession = (user: UserRecord) =>
       Effect.gen(function* () {
         const accessToken = yield* signAccessToken(user)
-        const refreshToken = yield* issueRefreshToken(user.id)
-        return { user: toPublicUser(user), accessToken, refreshToken }
+        const { raw, record } = mintRefreshToken(user.id)
+        yield* refreshTokens.create(record)
+        return { user: toPublicUser(user), accessToken, refreshToken: raw }
       })
 
     return {
@@ -159,30 +172,48 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
 
       /**
        * Exchange a valid refresh token for a new access + refresh pair.
-       * The old refresh token is deleted first (rotation). Fails with
-       * `RefreshTokenExpired` for unknown, expired, or orphaned tokens.
+       *
+       * Concurrency-safe rotation: the repository's `rotate` does an
+       * INSERT + DELETE in a single transaction, and fails with
+       * `RefreshTokenExpired` if the old row is gone (someone else
+       * already refreshed). Fails the same way for unknown, expired, or
+       * orphaned tokens.
        */
-      refresh: (token: string) =>
+      refresh: (rawToken: string) =>
         Effect.gen(function* () {
-          const record = yield* refreshTokens.get(token)
+          const oldId = hashRefreshToken(rawToken)
+
+          const record = yield* refreshTokens.get(oldId)
           if (!record) return yield* Effect.fail(new RefreshTokenExpired())
 
           if (new Date(record.expiresAt) <= new Date()) {
-            yield* refreshTokens.remove(token)
+            yield* refreshTokens.remove(oldId)
             return yield* Effect.fail(new RefreshTokenExpired())
           }
 
-          yield* refreshTokens.remove(token)
-
           const user = yield* users.get(record.userId)
-          if (!user) return yield* Effect.fail(new RefreshTokenExpired())
+          if (!user) {
+            yield* refreshTokens.remove(oldId)
+            return yield* Effect.fail(new RefreshTokenExpired())
+          }
 
-          return yield* issueSession(user)
+          const accessToken = yield* signAccessToken(user)
+          const { raw: newRaw, record: newRecord } = mintRefreshToken(user.id)
+
+          yield* refreshTokens.rotate(oldId, newRecord)
+
+          return {
+            user: toPublicUser(user),
+            accessToken,
+            refreshToken: newRaw,
+          }
         }).pipe(Effect.withSpan("Auth.refresh")),
 
       /** Invalidate a session. Idempotent — unknown tokens are ignored. */
-      logout: (token: string) =>
-        refreshTokens.remove(token).pipe(Effect.withSpan("Auth.logout")),
+      logout: (rawToken: string) =>
+        refreshTokens
+          .remove(hashRefreshToken(rawToken))
+          .pipe(Effect.withSpan("Auth.logout")),
 
       /**
        * Verify an access token. Returns `PublicUser` claims on success,

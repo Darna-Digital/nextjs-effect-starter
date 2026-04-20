@@ -3,6 +3,7 @@ import { ParseError } from "effect/ParseResult"
 import { AppRuntime } from "@/lib/effect/layers/runtime"
 import { CurrentUser } from "@/lib/effect/layers/auth"
 import { RequestUserResolver } from "@/lib/effect/http/request-user"
+import { enforceRateLimit, type RateLimitConfig } from "@/lib/rate-limit"
 
 /**
  * Contract for errors that render themselves as HTTP responses.
@@ -73,6 +74,7 @@ export function apiRoute<
     E,
     A
   >
+  rateLimit?: RateLimitConfig
 }) {
   const status = config.status ?? 200
 
@@ -85,6 +87,9 @@ export function apiRoute<
     const rawQuery = Object.fromEntries(url.searchParams)
 
     const program = Effect.gen(function* () {
+      if (config.rateLimit)
+        yield* enforceRateLimit(request, config.rateLimit)
+
       const resolver = yield* RequestUserResolver
       const user = yield* resolver.resolve(request)
 
@@ -138,8 +143,11 @@ export function apiRoute<
           if (isRenderableError(error)) {
             return error.toResponse()
           }
+          // Unexpected error — log server-side (the span already carries
+          // correlation) and return a flat body so we never leak internals.
+          console.error("Unhandled apiRoute error", error)
           return Response.json(
-            { error: "Internal server error", cause: String(error) },
+            { error: "Internal server error" },
             { status: 500 },
           )
         }),
