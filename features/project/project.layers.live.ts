@@ -1,16 +1,9 @@
-import { Layer } from "effect";
-import { createMysqlStorageLayer } from "@/lib/effect/layers/storage/storage.mysql";
-import { db } from "@/lib/db/client";
-import { projects } from "@/lib/db/schema";
-import type { Project } from "./project.model";
-import { ProjectStorage, Projects } from "./project.service";
+import { Layer } from "effect"
+import { ProjectRepository } from "./project.repository"
+import { mysqlProjectRepository } from "./project.repository.mysql"
+import { Projects } from "./project.service"
 
-/** MySQL-backed Layer for Projects (via Drizzle). */
+/** `Projects` backed by the Drizzle/MySQL repository. */
 export const ProjectsLive = Projects.Default.pipe(
-  Layer.provide(
-    Layer.succeed(
-      ProjectStorage,
-      createMysqlStorageLayer<Project>(db, projects),
-    ),
-  ),
-);
+  Layer.provide(Layer.succeed(ProjectRepository, mysqlProjectRepository)),
+)

@@ -1,46 +1,53 @@
-import { Context, Effect } from "effect"
-import type { Storage } from "@/lib/effect/layers/storage/storage.base"
-import { Organizations } from "@/features/organization/organization.service"
+import { Effect } from "effect"
 import { CurrentUser } from "@/lib/effect/layers/auth"
 import type { UserId } from "@/features/auth/auth.model"
+import { Organizations } from "@/features/organization/organization.service"
+import { type ProjectId } from "./project.model"
 import {
-  ProjectNotFound,
-  type Project,
-  type ProjectId,
-} from "./project.model"
+  ProjectRepository,
+  type ProjectFilter,
+} from "./project.repository"
 import type { CreateProject, UpdateProject } from "./project.requests"
-
-export class ProjectStorage extends Context.Tag("ProjectStorage")<
-  ProjectStorage,
-  Storage<Project>
->() {}
 
 /**
  * Projects service.
  *
  * Dependencies visible in the `R` channel:
- *   - `ProjectStorage`   — where projects live
- *   - `CurrentUser`      — who is making the request (read implicitly)
- *   - `Organizations`    — to verify the target org exists
- *   - `Tracer`, `Logger` — cross-cutting observability
+ *   - `ProjectRepository` — feature-level repo (filterable `list`, domain errors)
+ *   - `CurrentUser`       — the requesting user, pulled from context
+ *   - `Organizations`     — to verify the target org exists
+ *   - `Tracer`, `Logger`  — cross-cutting observability
  *
- * Storage errors are translated to domain errors inline via
- * `Effect.catchTag` — TypeScript only infers the `Id` brand when the
- * source effect is concrete in the pipe chain.
+ * Rails-style scopes (filter-aware `list`, `mine`) live here; the repo is a
+ * thin translation layer to Drizzle or an in-memory `Ref`. No generic
+ * `Storage<T>` straitjacket.
  */
 export class Projects extends Effect.Service<Projects>()("Projects", {
   accessors: true,
   effect: Effect.gen(function* () {
-    const storage = yield* ProjectStorage
+    const repo = yield* ProjectRepository
 
     return {
-      getAll: () => storage.getAll().pipe(Effect.withSpan("Projects.getAll")),
+      /** Filterable list. `{}` means "every project." */
+      list: (filter: ProjectFilter = {}) =>
+        repo.list(filter).pipe(
+          Effect.withSpan("Projects.list", {
+            attributes: {
+              "filter.ownerId": filter.ownerId,
+              "filter.organizationId": filter.organizationId,
+            },
+          }),
+        ),
+
+      /** Projects owned by the requesting user — classic Rails `current_user.projects`. */
+      mine: () =>
+        Effect.gen(function* () {
+          const user = yield* CurrentUser
+          return yield* repo.list({ ownerId: user.id as UserId })
+        }).pipe(Effect.withSpan("Projects.mine")),
 
       getById: (id: ProjectId) =>
-        storage.getById(id).pipe(
-          Effect.catchTag("EntityNotFound", (e) =>
-            Effect.fail(new ProjectNotFound({ id: e.id })),
-          ),
+        repo.get(id).pipe(
           Effect.withSpan("Projects.getById", {
             attributes: { "project.id": id },
           }),
@@ -49,11 +56,10 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
       create: (input: CreateProject) =>
         Effect.gen(function* () {
           // 1. Who is making this request? Pulled from context, not params.
-          //    This is Effect DI in action — identity is a dependency.
+          //    This is Effect DI — identity is a typed dependency.
           const user = yield* CurrentUser
 
           // 2. Cross-service call: verify the target org exists.
-          //    Fails with OrganizationNotFound which bubbles up the stack.
           yield* Organizations.getById(input.organizationId)
 
           // 3. Structured log, correlated to the current span automatically.
@@ -65,11 +71,10 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
             }),
           )
 
-          return yield* storage.create({
+          return yield* repo.create({
             id: crypto.randomUUID() as ProjectId,
-            // `CurrentUser` has a generic `id: string` in `lib/` (no feature
-            // imports). At runtime it's always a UserId — produced by
-            // `Auth.verifyToken` on the way in. Cast once, here.
+            // `CurrentUser` has a generic `id: string` in `lib/`. At runtime
+            // it's always a UserId — produced by `Auth.verifyToken`.
             ownerId: user.id as UserId,
             createdAt: new Date().toISOString(),
             ...input,
@@ -84,20 +89,14 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
         ),
 
       update: (id: ProjectId, input: UpdateProject) =>
-        storage.update(id, input).pipe(
-          Effect.catchTag("EntityNotFound", (e) =>
-            Effect.fail(new ProjectNotFound({ id: e.id })),
-          ),
+        repo.update(id, input).pipe(
           Effect.withSpan("Projects.update", {
             attributes: { "project.id": id },
           }),
         ),
 
       remove: (id: ProjectId) =>
-        storage.remove(id).pipe(
-          Effect.catchTag("EntityNotFound", (e) =>
-            Effect.fail(new ProjectNotFound({ id: e.id })),
-          ),
+        repo.remove(id).pipe(
           Effect.withSpan("Projects.remove", {
             attributes: { "project.id": id },
           }),

@@ -23,12 +23,31 @@ const updateProjectSchema = S.standardSchemaV1(UpdateProjectSchema)
 
 const projectApiErrorSchema = S.standardSchemaV1(ProjectApiErrorSchema)
 
-export function useProjects() {
+/**
+ * Optional filter mirrors `ListProjectsQuerySchema` on the server. Passing
+ * `{ ownerId: currentUser.id }` gives you "mine." Each field also accepts
+ * `undefined` so the page can translate UI state → query shape without
+ * stripping keys.
+ */
+export interface ProjectsFilter {
+  ownerId?: string | undefined
+  organizationId?: string | undefined
+}
+
+const buildProjectsUrl = (filter: ProjectsFilter) => {
+  const qs = new URLSearchParams()
+  if (filter.ownerId) qs.set("ownerId", filter.ownerId)
+  if (filter.organizationId) qs.set("organizationId", filter.organizationId)
+  const query = qs.toString()
+  return query ? `/api/projects?${query}` : "/api/projects"
+}
+
+export function useProjects(filter: ProjectsFilter = {}) {
   return useQuery({
-    queryKey: QUERY_KEY,
+    queryKey: [...QUERY_KEY, filter],
     queryFn: () =>
       apiClient
-        .url("/api/projects")
+        .url(buildProjectsUrl(filter))
         .schema(projectListSchema)
         .run("GET"),
   })

@@ -32,9 +32,10 @@ type RequestContext =
   | ManagedRuntime.ManagedRuntime.Context<typeof AppRuntime>
   | CurrentUser
 
-type RouteHandler<Body, Params, E, A> = (ctx: {
+type RouteHandler<Body, Params, Query, E, A> = (ctx: {
   body: Body
   params: Params
+  query: Query
 }) => Effect.Effect<A, E, RequestContext>
 
 type NextRouteContext = { params: Promise<Record<string, string>> }
@@ -56,16 +57,19 @@ type NextRouteContext = { params: Promise<Record<string, string>> }
 export function apiRoute<
   BodySchema extends AnySchema | undefined = undefined,
   ParamsSchema extends AnySchema | undefined = undefined,
+  QuerySchema extends AnySchema | undefined = undefined,
   E = never,
   A = unknown,
 >(config: {
   span: string
   body?: BodySchema
   params?: ParamsSchema
+  query?: QuerySchema
   status?: number
   handle: RouteHandler<
     InferSchema<BodySchema>,
     InferSchema<ParamsSchema>,
+    InferSchema<QuerySchema>,
     E,
     A
   >
@@ -78,6 +82,7 @@ export function apiRoute<
   ): Promise<Response> => {
     const url = new URL(request.url)
     const rawParams = (await context?.params) ?? {}
+    const rawQuery = Object.fromEntries(url.searchParams)
 
     const program = Effect.gen(function* () {
       const resolver = yield* RequestUserResolver
@@ -85,6 +90,10 @@ export function apiRoute<
 
       const params = config.params
         ? yield* Schema.decodeUnknown(config.params)(rawParams)
+        : undefined
+
+      const query = config.query
+        ? yield* Schema.decodeUnknown(config.query)(rawQuery)
         : undefined
 
       let body: unknown = undefined
@@ -102,6 +111,7 @@ export function apiRoute<
         .handle({
           body: body as InferSchema<BodySchema>,
           params: params as InferSchema<ParamsSchema>,
+          query: query as InferSchema<QuerySchema>,
         })
         .pipe(Effect.provideService(CurrentUser, user))
 

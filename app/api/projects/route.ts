@@ -1,15 +1,19 @@
 import { Effect } from "effect"
 import { apiRoute } from "@/lib/effect/http/api-route"
 import { requireUser } from "@/features/auth/auth.http"
-import { CreateProjectSchema } from "@/features/project/project.requests"
+import {
+  CreateProjectSchema,
+  ListProjectsQuerySchema,
+} from "@/features/project/project.requests"
 import { Projects } from "@/features/project/project.service"
 
 export const GET = apiRoute({
   span: "GET /api/projects",
-  handle: () =>
+  query: ListProjectsQuerySchema,
+  handle: ({ query }) =>
     Effect.gen(function* () {
       yield* requireUser
-      return yield* Projects.getAll()
+      return yield* Projects.list(query)
     }),
 })
 

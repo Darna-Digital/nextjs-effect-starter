@@ -1,4 +1,5 @@
 import { Schema as S } from "effect"
+import { UserId } from "@/features/auth/auth.model"
 import { OrganizationId } from "@/features/organization/organization.model"
 import { ProjectName } from "./project.model"
 
@@ -18,6 +19,17 @@ export const UpdateProjectSchema = S.Struct({
   description: S.optional(S.String),
 })
 export type UpdateProject = typeof UpdateProjectSchema.Type
+
+/**
+ * Query string for `GET /api/projects`. Both fields optional — empty query
+ * means "everything I'm allowed to see." Decoded from raw `Record<string,
+ * string>` produced by `URLSearchParams`.
+ */
+export const ListProjectsQuerySchema = S.Struct({
+  ownerId: S.optional(UserId),
+  organizationId: S.optional(OrganizationId),
+})
+export type ListProjectsQuery = typeof ListProjectsQuerySchema.Type
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Wire error shape — `"Not found"` covers both project and organization
