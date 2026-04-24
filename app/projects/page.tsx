@@ -22,8 +22,6 @@ export default function ProjectsPage() {
   const [filter, setFilter] = useState<ProjectsFilterState>(emptyProjectsFilter)
   const { data: currentUser } = useCurrentUser()
 
-  // UI state → query shape. The server runs SQL WHERE clauses from these;
-  // the client never fetches-then-filters.
   const query = toProjectsQuery(filter, currentUser?.id ?? null)
 
   const { data: projects = [], isLoading: loadingProjects } =
