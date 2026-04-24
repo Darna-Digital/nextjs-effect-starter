@@ -32,16 +32,14 @@ export class Organizations extends Effect.Service<Organizations>()(
       const repo = yield* OrganizationRepository
       const reserved = yield* ReservedOrganizationNames
 
-      const assertNotReserved = (name: string) =>
-        reserved.includes(name.toLowerCase())
+      function assertNotReserved(name: string) {
+        return reserved.includes(name.toLowerCase())
           ? Effect.fail(new OrganizationNameReserved({ name }))
           : Effect.void
+      }
 
-      const assertNameAvailable = (
-        name: string,
-        ignoreId?: OrganizationId,
-      ) =>
-        Effect.gen(function* () {
+      function assertNameAvailable(name: string, ignoreId?: OrganizationId) {
+        return Effect.gen(function* () {
           const all = yield* repo.list()
           const conflict = all.find(
             (o) =>
@@ -51,6 +49,7 @@ export class Organizations extends Effect.Service<Organizations>()(
           if (conflict)
             return yield* Effect.fail(new OrganizationNameTaken({ name }))
         })
+      }
 
       return {
         list: () => repo.list().pipe(Effect.withSpan("Organizations.list")),

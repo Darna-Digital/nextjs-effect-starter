@@ -5,7 +5,7 @@ import type {
   OrganizationId,
 } from "@/features/organization/schema/organization.schema.model"
 
-interface OrganizationListProps {
+type Props = {
   organizations: readonly Organization[]
   onDelete?: (id: OrganizationId) => void
 }
@@ -13,7 +13,7 @@ interface OrganizationListProps {
 export function OrganizationList({
   organizations,
   onDelete,
-}: OrganizationListProps) {
+}: Props) {
   if (organizations.length === 0) {
     return (
       <div className="py-12 text-center">

@@ -8,7 +8,7 @@ import type { AuthFieldError } from "../hooks/use-auth"
 
 type Mode = "login" | "register"
 
-interface AuthFormProps {
+type Props = {
   mode: Mode
   onSubmit: (data: Register | Login) => Promise<unknown>
   isPending?: boolean
@@ -23,7 +23,7 @@ export function AuthForm({
   onSubmit,
   isPending,
   submitError,
-}: AuthFormProps) {
+}: Props) {
   const schema = mode === "register" ? RegisterSchema : LoginSchema
   const {
     register,

@@ -115,10 +115,10 @@ export function useDeleteOrganization() {
  * rendered inline by the form (`submitError` prop). Toasting in addition
  * would double up.
  */
-const toastError = (error: OrganizationThrownError) => {
+function toastError(error: OrganizationThrownError) {
   const parsed = parseOrganizationError(error);
   if (parsed) window.alert(parsed.message);
-};
+}
 
 /**
  * Classifies an error thrown by an organization mutation/query into

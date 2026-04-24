@@ -46,8 +46,8 @@ const REFRESH_COOKIE_MAX_AGE = Number(
 
 const isProd = process.env.NODE_ENV === "production"
 
-const setAuthCookies = (accessToken: string, refreshToken: string) =>
-  Effect.promise(async () => {
+function setAuthCookies(accessToken: string, refreshToken: string) {
+  return Effect.promise(async () => {
     const jar = await cookies()
     jar.set(ACCESS_COOKIE, accessToken, {
       httpOnly: true,
@@ -64,19 +64,22 @@ const setAuthCookies = (accessToken: string, refreshToken: string) =>
       maxAge: REFRESH_COOKIE_MAX_AGE,
     })
   })
+}
 
-const clearAuthCookies = () =>
-  Effect.promise(async () => {
+function clearAuthCookies() {
+  return Effect.promise(async () => {
     const jar = await cookies()
     jar.delete({ name: ACCESS_COOKIE, path: "/" })
     jar.delete({ name: REFRESH_COOKIE, path: "/api/auth" })
   })
+}
 
-const getRefreshCookie = () =>
-  Effect.promise(async () => {
+function getRefreshCookie() {
+  return Effect.promise(async () => {
     const jar = await cookies()
     return jar.get(REFRESH_COOKIE)?.value ?? null
   })
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Request-user resolver (cookie strategy)
@@ -114,10 +117,7 @@ export const RequestUserResolverLive = Layer.effect(
   }),
 )
 
-const parseCookie = (
-  header: string | null,
-  name: string,
-): string | undefined => {
+function parseCookie(header: string | null, name: string): string | undefined {
   if (!header) return undefined
   for (const part of header.split(";")) {
     const [k, ...v] = part.trim().split("=")
@@ -152,18 +152,19 @@ type Session = {
 }
 
 /** Begin a session: write both tokens as cookies, return only the user. */
-export const completeSession = (session: Session) =>
-  setAuthCookies(session.accessToken, session.refreshToken).pipe(
+export function completeSession(session: Session) {
+  return setAuthCookies(session.accessToken, session.refreshToken).pipe(
     Effect.as({ user: session.user }),
   )
+}
 
 /**
  * Rotate the session from the refresh cookie. Missing cookie → fail; any
  * failure from `Auth.refresh` also clears cookies so the client's
  * auto-refresh loop can't spin forever.
  */
-export const resumeSession = () =>
-  Effect.gen(function* () {
+export function resumeSession() {
+  return Effect.gen(function* () {
     const token = yield* getRefreshCookie()
     if (!token) {
       yield* clearAuthCookies()
@@ -173,11 +174,13 @@ export const resumeSession = () =>
       Effect.tapError(() => clearAuthCookies()),
     )
   })
+}
 
 /** Invalidate server-side + clear cookies. Idempotent. */
-export const endSession = () =>
-  Effect.gen(function* () {
+export function endSession() {
+  return Effect.gen(function* () {
     const token = yield* getRefreshCookie()
     if (token) yield* Auth.logout(token)
     yield* clearAuthCookies()
   })
+}

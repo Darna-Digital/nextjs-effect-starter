@@ -32,7 +32,7 @@ export class TooManyRequests extends Data.TaggedError("TooManyRequests")<{
   }
 }
 
-export interface RateLimitConfig {
+export type RateLimitConfig = {
   /** Logical bucket name — usually the route, scoped per-IP at the edge. */
   readonly key: string
   /** Max requests allowed within the window. */

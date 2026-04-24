@@ -13,7 +13,7 @@ import { apiClient, registerUnauthenticatedHandler } from "./api-client"
 
 const meSchema = S.standardSchemaV1(S.Struct({ user: PublicUserSchema }))
 
-interface AuthContextValue {
+type AuthContextValue = {
   user: PublicUser | null
   isLoading: boolean
   setUser: (user: PublicUser) => void

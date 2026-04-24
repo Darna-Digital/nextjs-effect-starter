@@ -9,8 +9,7 @@ import {
 import type { Organization } from "@/features/organization/schema/organization.schema.model";
 import type { ProjectFormError } from "../hooks/use-projects";
 
-interface ProjectFormProps {
-  /** Organizations the user can attach the new project to. */
+type Props = {
   organizations: readonly Organization[];
   /** Resolve on success, reject on failure. Form only resets on resolve. */
   onSubmit: (data: CreateProject) => Promise<unknown>;
@@ -23,7 +22,7 @@ export function ProjectForm({
   onSubmit,
   isPending,
   submitError,
-}: ProjectFormProps) {
+}: Props) {
   const {
     register,
     handleSubmit,

@@ -4,7 +4,7 @@ import type { Project, ProjectId } from "@/features/project/schema/project.schem
 import type { Organization } from "@/features/organization/schema/organization.schema.model"
 import { useCurrentUser } from "@/features/auth/presentation/hooks/use-auth"
 
-interface ProjectListProps {
+type Props = {
   projects: readonly Project[]
   /** Used to resolve `organizationId` → display name. */
   organizations: readonly Organization[]
@@ -15,7 +15,7 @@ export function ProjectList({
   projects,
   organizations,
   onDelete,
-}: ProjectListProps) {
+}: Props) {
   const { data: currentUser } = useCurrentUser()
 
   if (projects.length === 0) {
@@ -28,8 +28,9 @@ export function ProjectList({
     )
   }
 
-  const orgName = (id: string) =>
-    organizations.find((o) => o.id === id)?.name ?? id
+  function orgName(id: string) {
+    return organizations.find((o) => o.id === id)?.name ?? id
+  }
 
   return (
     <ul className="divide-y divide-gray-100 dark:divide-white/10">
@@ -46,7 +47,7 @@ export function ProjectList({
                   {p.name}
                 </p>
                 {mine && (
-                  <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-400/20">
+                  <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[0.625rem] font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-400/20">
                     Yours
                   </span>
                 )}

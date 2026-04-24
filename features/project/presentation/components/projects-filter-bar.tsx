@@ -6,7 +6,7 @@ import type { Organization } from "@/features/organization/schema/organization.s
  * Filter state for `useProjects`. Mirrors `ListProjectsQuerySchema` on the
  * server — each field optional; absent means "no constraint."
  */
-export interface ProjectsFilterState {
+export type ProjectsFilterState = {
   onlyMine: boolean
   organizationId: string | null
 }
@@ -16,7 +16,7 @@ export const emptyProjectsFilter: ProjectsFilterState = {
   organizationId: null,
 }
 
-interface ProjectsFilterBarProps {
+type Props = {
   value: ProjectsFilterState
   onChange: (next: ProjectsFilterState) => void
   organizations: readonly Organization[]
@@ -29,7 +29,7 @@ export function ProjectsFilterBar({
   onChange,
   organizations,
   currentUserId,
-}: ProjectsFilterBarProps) {
+}: Props) {
   const active = value.onlyMine || value.organizationId !== null
 
   return (
@@ -91,10 +91,12 @@ export function ProjectsFilterBar({
  * Translate the UI state into the query shape `useProjects` expects.
  * Keeping this close to the component so the page layer stays dumb.
  */
-export const toProjectsQuery = (
+export function toProjectsQuery(
   state: ProjectsFilterState,
   currentUserId: string | null,
-) => ({
-  ownerId: state.onlyMine && currentUserId ? currentUserId : undefined,
-  organizationId: state.organizationId ?? undefined,
-})
+) {
+  return {
+    ownerId: state.onlyMine && currentUserId ? currentUserId : undefined,
+    organizationId: state.organizationId ?? undefined,
+  }
+}

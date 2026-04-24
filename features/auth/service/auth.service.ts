@@ -43,13 +43,13 @@ export class RefreshTokenTtlSeconds extends Context.Tag(
 
 const SCRYPT_KEY_LEN = 64
 
-const hashPassword = (password: string): string => {
+function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex")
   const derived = scryptSync(password, salt, SCRYPT_KEY_LEN).toString("hex")
   return `${salt}:${derived}`
 }
 
-const verifyPassword = (password: string, stored: string): boolean => {
+function verifyPassword(password: string, stored: string): boolean {
   const [salt, hash] = stored.split(":")
   if (!salt || !hash) return false
   const expected = Buffer.from(hash, "hex")
@@ -65,10 +65,13 @@ const verifyPassword = (password: string, stored: string): boolean => {
 // 256 bits of random entropy already rules out rainbow tables.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const generateRefreshToken = () => randomBytes(32).toString("hex")
+function generateRefreshToken() {
+  return randomBytes(32).toString("hex")
+}
 
-const hashRefreshToken = (raw: string) =>
-  createHash("sha256").update(raw).digest("hex")
+function hashRefreshToken(raw: string) {
+  return createHash("sha256").update(raw).digest("hex")
+}
 
 /**
  * Auth service. Owns user persistence, password hashing, JWTs, and refresh
@@ -93,8 +96,8 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
     const expiresIn = yield* JwtExpiresIn
     const refreshTtlSeconds = yield* RefreshTokenTtlSeconds
 
-    const signAccessToken = (user: UserRecord) =>
-      Effect.tryPromise({
+    function signAccessToken(user: UserRecord) {
+      return Effect.tryPromise({
         try: () =>
           new SignJWT({ email: user.email })
             .setProtectedHeader({ alg: "HS256" })
@@ -104,10 +107,11 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
             .sign(secret),
         catch: (cause) => new TokenSigningFailed({ cause }),
       })
+    }
 
     /** Build a fresh refresh-token record. Returns the raw token (for the
      *  cookie) and the record (id = sha256(raw); never stored in plain). */
-    const mintRefreshToken = (userId: UserId) => {
+    function mintRefreshToken(userId: UserId) {
       const raw = generateRefreshToken()
       const record: RefreshTokenRecord = {
         id: hashRefreshToken(raw),
@@ -120,13 +124,14 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
       return { raw, record }
     }
 
-    const issueSession = (user: UserRecord) =>
-      Effect.gen(function* () {
+    function issueSession(user: UserRecord) {
+      return Effect.gen(function* () {
         const accessToken = yield* signAccessToken(user)
         const { raw, record } = mintRefreshToken(user.id)
         yield* refreshTokens.create(record)
         return { user: toPublicUser(user), accessToken, refreshToken: raw }
       })
+    }
 
     return {
       register: (input: Register) =>

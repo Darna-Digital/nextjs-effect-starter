@@ -6,7 +6,7 @@ import { RequestUserResolver } from "@/lib/effect/http/request-user"
 import { RateLimiter, type RateLimitConfig } from "@/lib/effect/layers/rate-limit"
 
 /** `X-Forwarded-For` first hop, then `X-Real-IP`, else `"unknown"`. */
-const clientIp = (request: Request): string => {
+function clientIp(request: Request): string {
   const xff = request.headers.get("x-forwarded-for")
   if (xff) return xff.split(",")[0].trim()
   return request.headers.get("x-real-ip") ?? "unknown"
@@ -18,7 +18,7 @@ const clientIp = (request: Request): string => {
  * Each domain error class implements `toResponse()` so the HTTP shape
  * lives next to the error definition — no switchboard in the adapter.
  */
-export interface RenderableError {
+export type RenderableError = {
   toResponse(): Response
 }
 

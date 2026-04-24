@@ -29,12 +29,12 @@ const projectApiErrorSchema = S.standardSchemaV1(ProjectApiErrorSchema)
  * `undefined` so the page can translate UI state → query shape without
  * stripping keys.
  */
-export interface ProjectsFilter {
+export type ProjectsFilter = {
   ownerId?: string | undefined
   organizationId?: string | undefined
 }
 
-const buildProjectsUrl = (filter: ProjectsFilter) => {
+function buildProjectsUrl(filter: ProjectsFilter) {
   const qs = new URLSearchParams()
   if (filter.ownerId) qs.set("ownerId", filter.ownerId)
   if (filter.organizationId) qs.set("organizationId", filter.organizationId)

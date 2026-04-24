@@ -8,7 +8,7 @@ import {
 } from "@/features/organization/schema/organization.schema.requests";
 import type { OrganizationFieldError } from "../hooks/use-organizations";
 
-interface OrganizationFormProps {
+type Props = {
   /**
    * Called on submit. Should return a promise — the form resets only
    * when the promise resolves, so server-side errors stay visible with
@@ -16,7 +16,6 @@ interface OrganizationFormProps {
    */
   onSubmit: (data: CreateOrganization) => Promise<unknown>;
   isPending?: boolean;
-  /** Structured error from the most recent submit. */
   submitError?: OrganizationFieldError | null;
 }
 
@@ -24,7 +23,7 @@ export function OrganizationForm({
   onSubmit,
   isPending,
   submitError,
-}: OrganizationFormProps) {
+}: Props) {
   const {
     register,
     handleSubmit,
