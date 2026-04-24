@@ -1,6 +1,6 @@
 import { Layer } from "effect"
 import { OrganizationRepository } from "@/features/organization/repository/organization.repository"
-import { mysqlOrganizationRepository } from "@/features/organization/repository/organization.repository.mysql"
+import { createDbOrganizationRepository } from "@/features/organization/repository/organization.repository.db"
 import {
   Organizations,
   ReservedOrganizationNames,
@@ -10,7 +10,7 @@ import {
 export const OrganizationsLive = Organizations.Default.pipe(
   Layer.provide(
     Layer.mergeAll(
-      Layer.succeed(OrganizationRepository, mysqlOrganizationRepository),
+      Layer.succeed(OrganizationRepository, createDbOrganizationRepository),
       Layer.succeed(ReservedOrganizationNames, ["admin", "system", "root"]),
     ),
   ),

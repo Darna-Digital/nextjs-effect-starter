@@ -4,9 +4,9 @@ import {
   UserRepository,
 } from "@/features/auth/repository/auth.repository"
 import {
-  mysqlRefreshTokenRepository,
-  mysqlUserRepository,
-} from "@/features/auth/repository/auth.repository.mysql"
+  createRefreshTokenRepository,
+  createDbUserRepository,
+} from "@/features/auth/repository/auth.repository.db"
 import { RequestUserResolverLive } from "@/features/auth/auth.http"
 import {
   Auth,
@@ -37,8 +37,8 @@ if (encodedSecret.byteLength < 32) {
 export const AuthLive = Auth.Default.pipe(
   Layer.provide(
     Layer.mergeAll(
-      Layer.succeed(UserRepository, mysqlUserRepository),
-      Layer.succeed(RefreshTokenRepository, mysqlRefreshTokenRepository),
+      Layer.succeed(UserRepository, createDbUserRepository),
+      Layer.succeed(RefreshTokenRepository, createRefreshTokenRepository),
       Layer.succeed(JwtSecret, encodedSecret),
       Layer.succeed(
         JwtExpiresIn,

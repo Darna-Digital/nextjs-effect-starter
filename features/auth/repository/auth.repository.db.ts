@@ -13,11 +13,7 @@ import type {
   UserRepo,
 } from "@/features/auth/repository/auth.repository"
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Users
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const mysqlUserRepository: UserRepo = {
+export const createDbUserRepository: UserRepo = {
   findByEmail: (email) =>
     tryDb("mysql.users.findByEmail", () =>
       db
@@ -46,11 +42,7 @@ export const mysqlUserRepository: UserRepo = {
     ).pipe(Effect.as(user)),
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Refresh tokens
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const mysqlRefreshTokenRepository: RefreshTokenRepo = {
+export const createRefreshTokenRepository: RefreshTokenRepo = {
   create: (record) =>
     tryDb("mysql.refresh_tokens.insert", () =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

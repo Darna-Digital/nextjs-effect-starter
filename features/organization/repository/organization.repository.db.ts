@@ -23,7 +23,7 @@ const findOne = (id: Organization["id"]) =>
     db.select().from(organizations).where(eq(organizations.id, id)).limit(1),
   ).pipe(Effect.map((rows) => (rows[0] as Record<string, unknown>) ?? null))
 
-export const mysqlOrganizationRepository: OrganizationRepo = {
+export const createDbOrganizationRepository: OrganizationRepo = {
   list: () =>
     tryDb("mysql.organizations.list", () =>
       db.select().from(organizations),

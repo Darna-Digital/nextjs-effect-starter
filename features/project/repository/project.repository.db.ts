@@ -15,7 +15,7 @@ const findOne = (id: Project["id"]) =>
  * MySQL-backed `ProjectRepository`. Every query is wrapped in an OTel
  * span so traces show the database hop, not just the service call.
  */
-export const mysqlProjectRepository: ProjectRepo = {
+export const createDbProjectRepository: ProjectRepo = {
   list: (filter = {}) =>
     tryDb("mysql.projects.list", () => {
       const conditions = []
