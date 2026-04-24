@@ -21,23 +21,19 @@ import type { OrganizationRepo } from "@/features/organization/repository/organi
 const findOne = (id: Organization["id"]) =>
   tryDb("mysql.organizations.findOne", () =>
     db.select().from(organizations).where(eq(organizations.id, id)).limit(1),
-  ).pipe(Effect.map((rows) => (rows[0] as Record<string, unknown>) ?? null))
+  ).pipe(Effect.map((rows) => rows[0] ?? null))
 
 export const createDbOrganizationRepository: OrganizationRepo = {
   list: () =>
     tryDb("mysql.organizations.list", () =>
       db.select().from(organizations),
-    ).pipe(
-      Effect.map((rows) =>
-        (rows as Record<string, unknown>[]).map(stripNulls<Organization>),
-      ),
-    ),
+    ).pipe(Effect.map((rows) => rows.map(stripNulls))),
 
   get: (id) =>
     Effect.gen(function* () {
       const row = yield* findOne(id)
       if (!row) return yield* Effect.fail(new OrganizationNotFound({ id }))
-      return stripNulls<Organization>(row)
+      return stripNulls(row)
     }),
 
   create: (org) =>
@@ -46,8 +42,7 @@ export const createDbOrganizationRepository: OrganizationRepo = {
     // past the check, MySQL's UNIQUE index wins and we surface the same
     // domain error instead of a generic 500.
     Effect.tryPromise({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      try: () => db.insert(organizations).values(org as any),
+      try: () => db.insert(organizations).values(org),
       catch: (cause) =>
         isUniqueViolationError(cause)
           ? new OrganizationNameTaken({ name: org.name })
@@ -69,8 +64,7 @@ export const createDbOrganizationRepository: OrganizationRepo = {
         try: () =>
           db
             .update(organizations)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .set(patch as any)
+            .set(patch)
             .where(eq(organizations.id, id)),
         catch: (cause) =>
           isUniqueViolationError(cause) && typeof patch.name === "string"
@@ -82,7 +76,8 @@ export const createDbOrganizationRepository: OrganizationRepo = {
         }),
       )
       const updated = yield* findOne(id)
-      return stripNulls<Organization>(updated as Record<string, unknown>)
+      if (!updated) return yield* Effect.fail(new OrganizationNotFound({ id }))
+      return stripNulls(updated)
     }),
 
   remove: (id) =>

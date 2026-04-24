@@ -29,8 +29,7 @@ class InvalidJsonBody extends Data.TaggedError("InvalidJsonBody") {
 }
 
 // Schemas consumed at the edge have no dependencies — `R` is always `never`.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySchema = Schema.Schema<any, any, never>
+type AnySchema = Schema.Schema.AnyNoContext
 
 type InferSchema<S> =
   S extends Schema.Schema<infer A, infer _I, never> ? A : undefined

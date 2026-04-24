@@ -9,7 +9,7 @@ import type { ProjectRepo } from "@/features/project/repository/project.reposito
 const findOne = (id: Project["id"]) =>
   tryDb("mysql.projects.findOne", () =>
     db.select().from(projects).where(eq(projects.id, id)).limit(1),
-  ).pipe(Effect.map((rows) => (rows[0] as Record<string, unknown>) ?? null))
+  ).pipe(Effect.map((rows) => rows[0] ?? null))
 
 /**
  * MySQL-backed `ProjectRepository`. Every query is wrapped in an OTel
@@ -28,23 +28,18 @@ export const createDbProjectRepository: ProjectRepo = {
             .from(projects)
             .where(and(...conditions))
         : db.select().from(projects)
-    }).pipe(
-      Effect.map((rows) =>
-        (rows as Record<string, unknown>[]).map(stripNulls<Project>),
-      ),
-    ),
+    }).pipe(Effect.map((rows) => rows.map(stripNulls))),
 
   get: (id) =>
     Effect.gen(function* () {
       const row = yield* findOne(id)
       if (!row) return yield* Effect.fail(new ProjectNotFound({ id }))
-      return stripNulls<Project>(row)
+      return stripNulls(row)
     }),
 
   create: (project) =>
     tryDb("mysql.projects.insert", () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      db.insert(projects).values(project as any),
+      db.insert(projects).values(project),
     ).pipe(Effect.as(project)),
 
   update: (id, patch) =>
@@ -52,14 +47,11 @@ export const createDbProjectRepository: ProjectRepo = {
       const existing = yield* findOne(id)
       if (!existing) return yield* Effect.fail(new ProjectNotFound({ id }))
       yield* tryDb("mysql.projects.update", () =>
-        db
-          .update(projects)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .set(patch as any)
-          .where(eq(projects.id, id)),
+        db.update(projects).set(patch).where(eq(projects.id, id)),
       )
       const updated = yield* findOne(id)
-      return stripNulls<Project>(updated as Record<string, unknown>)
+      if (!updated) return yield* Effect.fail(new ProjectNotFound({ id }))
+      return stripNulls(updated)
     }),
 
   remove: (id) =>

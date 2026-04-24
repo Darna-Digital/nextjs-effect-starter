@@ -37,16 +37,14 @@ export const createDbUserRepository: UserRepo = {
 
   create: (user) =>
     tryDb("mysql.users.insert", () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      db.insert(users).values(user as any),
+      db.insert(users).values(user),
     ).pipe(Effect.as(user)),
 }
 
 export const createRefreshTokenRepository: RefreshTokenRepo = {
   create: (record) =>
     tryDb("mysql.refresh_tokens.insert", () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      db.insert(refreshTokens).values(record as any),
+      db.insert(refreshTokens).values(record),
     ).pipe(Effect.as(record)),
 
   get: (id) =>
@@ -79,8 +77,7 @@ export const createRefreshTokenRepository: RefreshTokenRepo = {
           const affected =
             (result as { affectedRows?: number })?.affectedRows ?? 0
           if (affected === 0) throw new RefreshTokenExpired()
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await tx.insert(refreshTokens).values(newRecord as any)
+          await tx.insert(refreshTokens).values(newRecord)
         }),
       catch: (cause) =>
         cause instanceof RefreshTokenExpired
