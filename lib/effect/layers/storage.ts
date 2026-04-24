@@ -9,40 +9,46 @@ export class StorageError extends Data.TaggedError("StorageError")<{
   }
 }
 
-export type Patch<T> = {
-  [K in keyof Omit<T, "id">]?: Omit<T, "id">[K] | undefined;
+export type Patch<Row> = {
+  [Key in keyof Omit<Row, "id">]?: Omit<Row, "id">[Key] | undefined;
 };
 
 export const DB_SPAN_ATTRS = { "db.system": "mysql" } as const;
 
-export const tryDb = <A>(name: string, run: () => Promise<A>) =>
-  Effect.tryPromise({
+export function tryDb<Result>(name: string, run: () => Promise<Result>) {
+  return Effect.tryPromise({
     try: run,
     catch: (cause) => new StorageError({ cause }),
   }).pipe(Effect.withSpan(name, { attributes: DB_SPAN_ATTRS }));
+}
 
-export const stripNulls = <T>(row: object): T => {
+export function stripNulls<Row>(row: object): Row {
   const out: Record<string, unknown> = {};
   for (const key in row) {
     const value = (row as Record<string, unknown>)[key];
     if (value !== null) out[key] = value;
   }
-  return out as T;
-};
+  return out as Row;
+}
 
-export const isFkReferencedError = (cause: unknown): boolean =>
-  matchMysqlError(
+export function isFkReferencedError(cause: unknown): boolean {
+  return matchMysqlError(
     cause,
     (e) => e.code === "ER_ROW_IS_REFERENCED_2" || e.errno === 1451,
   );
+}
 
-export const isUniqueViolationError = (cause: unknown): boolean =>
-  matchMysqlError(cause, (e) => e.code === "ER_DUP_ENTRY" || e.errno === 1062);
+export function isUniqueViolationError(cause: unknown): boolean {
+  return matchMysqlError(
+    cause,
+    (e) => e.code === "ER_DUP_ENTRY" || e.errno === 1062,
+  );
+}
 
-const matchMysqlError = (
+function matchMysqlError(
   cause: unknown,
   pred: (e: { code?: string; errno?: number }) => boolean,
-): boolean => {
+): boolean {
   let e = cause as
     | { code?: string; errno?: number; cause?: unknown }
     | undefined;
@@ -51,4 +57,4 @@ const matchMysqlError = (
     e = e.cause as typeof e;
   }
   return false;
-};
+}

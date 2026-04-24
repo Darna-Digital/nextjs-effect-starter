@@ -7,16 +7,17 @@ import type {
   OrganizationId,
 } from "@/features/organization/schema/organization.schema.model";
 
-const run = <A, E>(
-  effect: Effect.Effect<A, E, Organizations>,
+function run<Success, Failure>(
+  effect: Effect.Effect<Success, Failure, Organizations>,
   options?: {
     seed?: readonly Organization[];
     reserved?: readonly string[];
   },
-) =>
-  Effect.runPromise(
+) {
+  return Effect.runPromise(
     effect.pipe(Effect.either, Effect.provide(OrganizationsMemory(options))),
   );
+}
 
 const orgA: Organization = {
   id: "org-a" as OrganizationId,

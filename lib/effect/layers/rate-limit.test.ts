@@ -6,13 +6,16 @@ import {
   type RateLimitConfig,
 } from "./rate-limit";
 
-const run = <A, E>(effect: Effect.Effect<A, E, RateLimiter>) =>
-  Effect.runPromise(
+function run<Success, Failure>(
+  effect: Effect.Effect<Success, Failure, RateLimiter>,
+) {
+  return Effect.runPromise(
     effect.pipe(
       Effect.either,
       Effect.provide(Layer.mergeAll(RateLimiterLive, TestContext.TestContext)),
     ),
   );
+}
 
 const config: RateLimitConfig = { key: "test", max: 3, windowMs: 1_000 };
 
@@ -32,7 +35,7 @@ describe("RateLimiter.check — window behaviour", () => {
       Effect.gen(function* () {
         const limiter = yield* RateLimiter;
         for (let i = 0; i < config.max; i++) yield* limiter.check(config);
-        yield* limiter.check(config); // the one over the line
+        yield* limiter.check(config);
       }),
     );
     expect(Either.isLeft(result)).toBe(true);

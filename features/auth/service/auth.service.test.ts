@@ -9,34 +9,40 @@ import type {
   UserRecord,
 } from "@/features/auth/schema/auth.schema.model";
 
-const run = <A, E>(
-  effect: Effect.Effect<A, E, Auth>,
+function run<Success, Failure>(
+  effect: Effect.Effect<Success, Failure, Auth>,
   layer: Layer.Layer<Auth> = AuthMemory(),
-) => Effect.runPromise(effect.pipe(Effect.either, Effect.provide(layer)));
+) {
+  return Effect.runPromise(effect.pipe(Effect.either, Effect.provide(layer)));
+}
 
-const hashPassword = (password: string): string => {
+function hashPassword(password: string): string {
   const salt = "0123456789abcdef0123456789abcdef";
   const derived = scryptSync(password, salt, 64).toString("hex");
   return `${salt}:${derived}`;
-};
+}
 
-const makeUser = (overrides: Partial<UserRecord> = {}): UserRecord => ({
-  id: "user-1" as UserId,
-  email: "alice@example.com",
-  passwordHash: hashPassword("password123"),
-  createdAt: "2026-01-01T00:00:00.000Z",
-  ...overrides,
-});
+function makeUser(overrides: Partial<UserRecord> = {}): UserRecord {
+  return {
+    id: "user-1" as UserId,
+    email: "alice@example.com",
+    passwordHash: hashPassword("password123"),
+    createdAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
 
-const makeRefreshToken = (
+function makeRefreshToken(
   overrides: Partial<RefreshTokenRecord> = {},
-): RefreshTokenRecord => ({
-  id: "refresh-token-abc",
-  userId: "user-1" as UserId,
-  expiresAt: "2099-01-01T00:00:00.000Z",
-  createdAt: "2026-01-01T00:00:00.000Z",
-  ...overrides,
-});
+): RefreshTokenRecord {
+  return {
+    id: "refresh-token-abc",
+    userId: "user-1" as UserId,
+    expiresAt: "2099-01-01T00:00:00.000Z",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
 
 describe("Auth.register", () => {
   it("creates a user and returns access + refresh tokens", async () => {

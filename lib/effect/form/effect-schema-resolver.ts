@@ -2,16 +2,16 @@ import { Schema, Either } from "effect"
 import { ArrayFormatter } from "effect/ParseResult"
 import type { FieldErrors, FieldValues, Resolver } from "react-hook-form"
 
-export function effectSchemaResolver<A extends FieldValues, I>(
-  schema: Schema.Schema<A, I>,
-): Resolver<A> {
+export function effectSchemaResolver<Values extends FieldValues, Input>(
+  schema: Schema.Schema<Values, Input>,
+): Resolver<Values> {
   return async (values) => {
     const result = Schema.decodeUnknownEither(schema)(values)
 
     return Either.match(result, {
       onLeft: (parseError) => {
         const issues = ArrayFormatter.formatErrorSync(parseError)
-        const errors: FieldErrors<A> = {}
+        const errors: FieldErrors<Values> = {}
 
         for (const issue of issues) {
           const path = issue.path.join(".")

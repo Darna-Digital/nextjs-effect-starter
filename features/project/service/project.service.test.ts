@@ -23,15 +23,15 @@ const orgA: Organization = {
   name: "Acme",
 };
 
-const run = <A, E>(
-  effect: Effect.Effect<A, E, Projects | Organizations | CurrentUser>,
+function run<Success, Failure>(
+  effect: Effect.Effect<Success, Failure, Projects | Organizations | CurrentUser>,
   options?: {
     projects?: readonly Project[];
     organizations?: readonly Organization[];
     user?: User;
   },
-) =>
-  Effect.runPromise(
+) {
+  return Effect.runPromise(
     effect.pipe(
       Effect.either,
       Effect.provide(
@@ -43,6 +43,7 @@ const run = <A, E>(
       ),
     ),
   );
+}
 
 describe("Projects.create", () => {
   it("fails when the target organization does not exist", async () => {

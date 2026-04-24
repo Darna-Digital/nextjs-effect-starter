@@ -26,18 +26,20 @@ class InvalidJsonBody extends Data.TaggedError("InvalidJsonBody") {
 
 type AnySchema = Schema.Schema.AnyNoContext;
 
-type InferSchema<S> =
-  S extends Schema.Schema<infer A, infer _I, never> ? A : undefined;
+type InferSchema<Spec> =
+  Spec extends Schema.Schema<infer Decoded, infer _Encoded, never>
+    ? Decoded
+    : undefined;
 
 type RequestContext =
   | ManagedRuntime.ManagedRuntime.Context<typeof AppRuntime>
   | CurrentUser;
 
-type RouteHandler<Body, Params, Query, E, A> = (ctx: {
+type RouteHandler<Body, Params, Query, Failure, Success> = (ctx: {
   body: Body;
   params: Params;
   query: Query;
-}) => Effect.Effect<A, E, RequestContext>;
+}) => Effect.Effect<Success, Failure, RequestContext>;
 
 type NextRouteContext = { params: Promise<Record<string, string>> };
 
@@ -45,8 +47,8 @@ export function apiRoute<
   BodySchema extends AnySchema | undefined = undefined,
   ParamsSchema extends AnySchema | undefined = undefined,
   QuerySchema extends AnySchema | undefined = undefined,
-  E = never,
-  A = unknown,
+  Failure = never,
+  Success = unknown,
 >(config: {
   span: string;
   body?: BodySchema;
@@ -57,8 +59,8 @@ export function apiRoute<
     InferSchema<BodySchema>,
     InferSchema<ParamsSchema>,
     InferSchema<QuerySchema>,
-    E,
-    A
+    Failure,
+    Success
   >;
   rateLimit?: RateLimitConfig;
 }) {
@@ -134,8 +136,6 @@ export function apiRoute<
           if (isRenderableError(error)) {
             return error.toResponse();
           }
-          // Unexpected error — log server-side (the span already carries
-          // correlation) and return a flat body so we never leak internals.
           console.error("Unhandled apiRoute error", error);
           return Response.json(
             { error: "Internal server error" },
