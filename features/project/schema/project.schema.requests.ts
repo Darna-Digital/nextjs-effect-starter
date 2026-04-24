@@ -1,5 +1,4 @@
 import { Schema as S } from "effect";
-import { UserId } from "@/features/auth/schema/auth.schema.model";
 import { OrganizationId } from "@/features/organization/schema/organization.schema.model";
 import { ProjectName } from "@/features/project/schema/project.schema.model";
 
@@ -17,10 +16,9 @@ export const UpdateProjectSchema = S.Struct({
 export type UpdateProject = typeof UpdateProjectSchema.Type;
 
 export const ListProjectsQuerySchema = S.Struct({
-  ownerId: S.optional(UserId),
+  ownerId: S.optional(S.String),
   organizationId: S.optional(OrganizationId),
 });
-export type ListProjectsQuery = typeof ListProjectsQuerySchema.Type;
 
 export const ProjectApiErrorSchema = S.Union(
   S.Struct({ error: S.Literal("Not found"), id: S.String }),

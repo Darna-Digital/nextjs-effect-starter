@@ -1,6 +1,5 @@
 import { Data, Schema as S } from "effect";
 import { OrganizationId } from "@/features/organization/schema/organization.schema.model";
-import { UserId } from "@/features/auth/schema/auth.schema.model";
 
 export const ProjectId = S.String.pipe(S.brand("ProjectId"));
 export type ProjectId = typeof ProjectId.Type;
@@ -12,7 +11,7 @@ export const ProjectSchema = S.Struct({
   name: ProjectName,
   description: S.optional(S.String),
   organizationId: OrganizationId,
-  ownerId: UserId,
+  ownerId: S.String,
   createdAt: S.String,
 });
 export type Project = typeof ProjectSchema.Type;
