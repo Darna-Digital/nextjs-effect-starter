@@ -1,6 +1,5 @@
 import { Effect } from "effect";
 import { CurrentUser } from "@/lib/effect/layers/auth";
-import type { UserId } from "@/features/auth/schema/auth.schema.model";
 import { Organizations } from "@/features/organization/service/organization.service";
 import { type ProjectId } from "@/features/project/schema/project.schema.model";
 import {
@@ -31,7 +30,7 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
       mine: () =>
         Effect.gen(function* () {
           const user = yield* CurrentUser;
-          return yield* repo.list({ ownerId: user.id as UserId });
+          return yield* repo.list({ ownerId: user.id });
         }).pipe(Effect.withSpan("Projects.mine")),
 
       getById: (id: ProjectId) =>
@@ -57,7 +56,7 @@ export class Projects extends Effect.Service<Projects>()("Projects", {
 
           return yield* repo.create({
             id: crypto.randomUUID() as ProjectId,
-            ownerId: user.id as UserId,
+            ownerId: user.id,
             createdAt: new Date().toISOString(),
             ...input,
           });

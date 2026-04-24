@@ -1,7 +1,8 @@
 import { Context, Schema as S } from "effect";
+import { UserId } from "@/features/auth/schema/auth.schema.model";
 
 export const UserSchema = S.Struct({
-  id: S.String,
+  id: UserId,
   email: S.String,
 });
 export type User = typeof UserSchema.Type;
