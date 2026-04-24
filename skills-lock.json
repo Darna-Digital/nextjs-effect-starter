@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "code-standards-skill": {
+      "source": "darna-digital/skills",
+      "sourceType": "github",
+      "computedHash": "072bd9e0930edcd8930017bee5154f349358a0a129f7fb093c9106d3d202452c"
+    },
     "composable-functions-skill": {
       "source": "darna-digital/skills",
       "sourceType": "github",
