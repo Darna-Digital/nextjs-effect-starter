@@ -12,8 +12,6 @@ import { Auth } from "@/features/auth/service/auth.service";
 const ACCESS_COOKIE = "access_token";
 const REFRESH_COOKIE = "refresh_token";
 
-const ACCESS_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
-
 const REFRESH_COOKIE_MAX_AGE = Number(
   process.env.AUTH_REFRESH_TOKEN_TTL_SECONDS ?? 7 * 24 * 60 * 60,
 );
@@ -28,7 +26,6 @@ function setAuthCookies(accessToken: string, refreshToken: string) {
       sameSite: "lax",
       secure: isProd,
       path: "/",
-      maxAge: ACCESS_COOKIE_MAX_AGE,
     });
     jar.set(REFRESH_COOKIE, refreshToken, {
       httpOnly: true,

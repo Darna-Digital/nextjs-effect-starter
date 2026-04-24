@@ -5,7 +5,6 @@ import { Auth } from "@/features/auth/service/auth.service";
 import { AuthMemory } from "@/features/auth/layer/auth.layer.memory";
 import type {
   RefreshTokenRecord,
-  UserId,
   UserRecord,
 } from "@/features/auth/schema/auth.schema.model";
 
@@ -24,7 +23,7 @@ function hashPassword(password: string): string {
 
 function makeUser(overrides: Partial<UserRecord> = {}): UserRecord {
   return {
-    id: "user-1" as UserId,
+    id: "user-1",
     email: "alice@example.com",
     passwordHash: hashPassword("password123"),
     createdAt: "2026-01-01T00:00:00.000Z",
@@ -37,7 +36,7 @@ function makeRefreshToken(
 ): RefreshTokenRecord {
   return {
     id: "refresh-token-abc",
-    userId: "user-1" as UserId,
+    userId: "user-1",
     expiresAt: "2099-01-01T00:00:00.000Z",
     createdAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -78,7 +77,7 @@ describe("Auth.register", () => {
 
 describe("Auth.login", () => {
   const alice = makeUser({
-    id: "alice" as UserId,
+    id: "alice",
     email: "alice@example.com",
     passwordHash: hashPassword("correct-horse-battery"),
   });
@@ -206,7 +205,7 @@ describe("Auth.refresh", () => {
   });
 
   it("fails + deletes the token when it is past its TTL", async () => {
-    const user = makeUser({ id: "user-42" as UserId });
+    const user = makeUser({ id: "user-42"  });
     const stale = makeRefreshToken({
       id: "stale-token",
       userId: user.id,
@@ -235,7 +234,7 @@ describe("Auth.refresh", () => {
   it("fails when the user behind the refresh token no longer exists", async () => {
     const orphan = makeRefreshToken({
       id: "orphan-token",
-      userId: "ghost" as UserId,
+      userId: "ghost",
     });
     const result = await run(
       Auth.refresh("orphan-token"),

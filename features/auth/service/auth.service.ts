@@ -18,7 +18,6 @@ import {
   toPublicUser,
   type PublicUser,
   type RefreshTokenRecord,
-  type UserId,
   type UserRecord,
 } from "@/features/auth/schema/auth.schema.model";
 import type {
@@ -86,7 +85,7 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
       });
     }
 
-    function mintRefreshToken(userId: UserId) {
+    function mintRefreshToken(userId: string) {
       const raw = generateRefreshToken();
       const record: RefreshTokenRecord = {
         id: hashRefreshToken(raw),
@@ -118,7 +117,7 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
             );
 
           const user: UserRecord = {
-            id: crypto.randomUUID() as UserId,
+            id: crypto.randomUUID(),
             email: input.email,
             passwordHash: hashPassword(input.password),
             createdAt: new Date().toISOString(),
@@ -190,7 +189,7 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
           try: async () => {
             const { payload } = await jwtVerify(token, secret);
             return {
-              id: payload.sub as UserId,
+              id: payload.sub!,
               email: payload.email as string,
             } satisfies PublicUser;
           },

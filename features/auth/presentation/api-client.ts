@@ -12,6 +12,21 @@ export const registerUnauthenticatedHandler = (fn: UnauthenticatedHandler) => {
   onUnauthenticated = fn;
 };
 
+let inFlightRefresh: Promise<boolean> | null = null;
+
+function refreshSession() {
+  inFlightRefresh ??= fetch("/api/auth/refresh", {
+    method: "POST",
+    credentials: "include",
+  })
+    .then((res) => res.ok)
+    .catch(() => false)
+    .finally(() => {
+      inFlightRefresh = null;
+    });
+  return inFlightRefresh;
+}
+
 export const apiClient = createComposableFetcher({
   credentials: "include",
   catch: async ({ error, retry }) => {
@@ -19,12 +34,9 @@ export const apiClient = createComposableFetcher({
       throw toError(error);
     }
 
-    const refreshRes = await fetch("/api/auth/refresh", {
-      method: "POST",
-      credentials: "include",
-    }).catch(() => null);
+    const refreshed = await refreshSession();
 
-    if (!refreshRes?.ok) {
+    if (!refreshed) {
       onUnauthenticated();
       throw toError(error);
     }

@@ -1,7 +1,5 @@
 import { Data, Schema as S } from "effect";
 
-export const UserId = S.String.pipe(S.brand("UserId"));
-export type UserId = typeof UserId.Type;
 
 export const Email = S.Trim.pipe(
   S.lowercased(),
@@ -16,7 +14,7 @@ export const Password = S.String.pipe(
 );
 
 export const UserRecordSchema = S.Struct({
-  id: UserId,
+  id: S.String,
   email: Email,
   passwordHash: S.String,
   createdAt: S.String,
@@ -24,7 +22,7 @@ export const UserRecordSchema = S.Struct({
 export type UserRecord = typeof UserRecordSchema.Type;
 
 export const PublicUserSchema = S.Struct({
-  id: UserId,
+  id: S.String,
   email: Email,
 });
 export type PublicUser = typeof PublicUserSchema.Type;
@@ -36,7 +34,7 @@ export const toPublicUser = (u: UserRecord): PublicUser => ({
 
 export const RefreshTokenRecordSchema = S.Struct({
   id: S.String,
-  userId: UserId,
+  userId: S.String,
   expiresAt: S.String,
   createdAt: S.String,
 });

@@ -9,7 +9,6 @@ import type {
   Project,
   ProjectId,
 } from "@/features/project/schema/project.schema.model";
-import type { UserId } from "@/features/auth/schema/auth.schema.model";
 import type {
   Organization,
   OrganizationId,
@@ -97,21 +96,21 @@ const aliceInA: Project = {
   id: "p-1" as ProjectId,
   name: "Alice at A",
   organizationId: orgA.id,
-  ownerId: alice.id as UserId,
+  ownerId: alice.id,
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 const aliceInB: Project = {
   id: "p-2" as ProjectId,
   name: "Alice at B",
   organizationId: orgB.id,
-  ownerId: alice.id as UserId,
+  ownerId: alice.id,
   createdAt: "2026-01-02T00:00:00.000Z",
 };
 const bobInA: Project = {
   id: "p-3" as ProjectId,
   name: "Bob at A",
   organizationId: orgA.id,
-  ownerId: bob.id as UserId,
+  ownerId: bob.id,
   createdAt: "2026-01-03T00:00:00.000Z",
 };
 
@@ -124,7 +123,7 @@ describe("Projects.list", () => {
   });
 
   it("filters by ownerId", async () => {
-    const result = await run(Projects.list({ ownerId: alice.id as UserId }), {
+    const result = await run(Projects.list({ ownerId: alice.id }), {
       projects: seed,
     });
     expect(Either.isRight(result)).toBe(true);
@@ -152,7 +151,7 @@ describe("Projects.list", () => {
   it("intersects filters (ownerId AND organizationId)", async () => {
     const result = await run(
       Projects.list({
-        ownerId: alice.id as UserId,
+        ownerId: alice.id,
         organizationId: orgA.id,
       }),
       { projects: seed },
