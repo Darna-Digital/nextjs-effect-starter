@@ -11,10 +11,6 @@ const findOne = (id: Project["id"]) =>
     db.select().from(projects).where(eq(projects.id, id)).limit(1),
   ).pipe(Effect.map((rows) => rows[0] ?? null))
 
-/**
- * MySQL-backed `ProjectRepository`. Every query is wrapped in an OTel
- * span so traces show the database hop, not just the service call.
- */
 export const createDbProjectRepository: ProjectRepo = {
   list: (filter = {}) =>
     tryDb("mysql.projects.list", () => {

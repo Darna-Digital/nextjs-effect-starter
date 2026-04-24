@@ -30,7 +30,6 @@ const organizationApiErrorSchema = S.standardSchemaV1(
   OrganizationApiErrorSchema,
 );
 
-/** The typed shape composable-fetcher throws when an HTTP error matches the schema. */
 type OrganizationThrownError = FetcherThrownError<OrganizationApiError>;
 
 export function useOrganizations() {
@@ -106,35 +105,16 @@ export function useDeleteOrganization() {
   });
 }
 
-/**
- * Centralized toast-on-error for organization mutations.
- * Swap `window.alert` for a real toast library later — one change here
- * updates every hook that opts in.
- *
- * Not used by `useCreate…` / `useUpdate…` because those errors are
- * rendered inline by the form (`submitError` prop). Toasting in addition
- * would double up.
- */
 function toastError(error: OrganizationThrownError) {
   const parsed = parseOrganizationError(error);
   if (parsed) window.alert(parsed.message);
 }
 
-/**
- * Classifies an error thrown by an organization mutation/query into
- * something the form can render directly:
- *  - `field: "name"` → message belongs under the name input
- *  - `field: null`   → show as a general banner
- */
 export type OrganizationFieldError = {
   field: "name" | null;
   message: string;
 };
 
-/**
- * Exhaustive match over the API error union. Adding a new member to
- * `OrganizationApiErrorSchema` without handling it here is a type error.
- */
 const matchApiError = Match.type<OrganizationApiError>().pipe(
   Match.discriminator("error")("Name already taken", (e) => ({
     field: "name" as const,

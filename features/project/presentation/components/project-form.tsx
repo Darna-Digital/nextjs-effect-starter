@@ -11,11 +11,10 @@ import type { ProjectFormError } from "../hooks/use-projects";
 
 type Props = {
   organizations: readonly Organization[];
-  /** Resolve on success, reject on failure. Form only resets on resolve. */
   onSubmit: (data: CreateProject) => Promise<unknown>;
   isPending?: boolean;
   submitError?: ProjectFormError | null;
-}
+};
 
 export function ProjectForm({
   organizations,
@@ -39,9 +38,7 @@ export function ProjectForm({
     try {
       await onSubmit(data);
       reset({ organizationId: organizations[0]?.id });
-    } catch {
-      // Keep user's input visible so they can correct and retry.
-    }
+    } catch {}
   };
 
   const orgServerError =

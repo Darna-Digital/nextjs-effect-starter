@@ -1,30 +1,11 @@
-import { relations } from "drizzle-orm"
-import { mysqlTable, varchar } from "drizzle-orm/mysql-core"
-
-/**
- * MySQL tables for the whole app. Columns are plain `varchar` — feature
- * repositories brand IDs at the boundary (row → domain type) so this file
- * stays free of feature imports and the dependency graph flows one way:
- * features → infra.
- */
-
-// ─────────────────────────────────────────────────────────────────────────────
-// organizations
-// ─────────────────────────────────────────────────────────────────────────────
+import { relations } from "drizzle-orm";
+import { mysqlTable, varchar } from "drizzle-orm/mysql-core";
 
 export const organizations = mysqlTable("organizations", {
   id: varchar("id", { length: 36 }).primaryKey(),
-  // MySQL's default utf8mb4 collation is case-insensitive, so a UNIQUE
-  // index here rejects "Acme" vs "acme" at the DB level — the race-safe
-  // fallback if two concurrent creates slip past the service's pre-flight
-  // uniqueness check.
   name: varchar("name", { length: 255 }).notNull().unique(),
   description: varchar("description", { length: 1024 }),
-})
-
-// ─────────────────────────────────────────────────────────────────────────────
-// projects — belongs to an organization
-// ─────────────────────────────────────────────────────────────────────────────
+});
 
 export const projects = mysqlTable("projects", {
   id: varchar("id", { length: 36 }).primaryKey(),
@@ -36,42 +17,28 @@ export const projects = mysqlTable("projects", {
   ownerId: varchar("owner_id", { length: 36 })
     .notNull()
     .references(() => users.id),
-  // ISO 8601 string to match the domain's `createdAt: S.String`. Swap to
-  // `datetime` (with conversion) if SQL-level date queries are needed.
   createdAt: varchar("created_at", { length: 32 }).notNull(),
-})
-
-// ─────────────────────────────────────────────────────────────────────────────
-// users
-// ─────────────────────────────────────────────────────────────────────────────
+});
 
 export const users = mysqlTable("users", {
   id: varchar("id", { length: 36 }).primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   createdAt: varchar("created_at", { length: 32 }).notNull(),
-})
-
-// ─────────────────────────────────────────────────────────────────────────────
-// refresh_tokens — one row per active session; rotated on each use.
-// The primary key is sha256(secret_token); the raw secret only lives in
-// the user's cookie and in flight during rotation.
-// ─────────────────────────────────────────────────────────────────────────────
+});
 
 export const refreshTokens = mysqlTable("refresh_tokens", {
-  // sha256 hex = 64 chars; leave headroom for future hash upgrades.
   id: varchar("id", { length: 128 }).primaryKey(),
   userId: varchar("user_id", { length: 36 })
     .notNull()
     .references(() => users.id),
   expiresAt: varchar("expires_at", { length: 32 }).notNull(),
   createdAt: varchar("created_at", { length: 32 }).notNull(),
-})
+});
 
-/** Teaches `db.query.projects.findMany({ with: { organization: true } })` how to join. */
 export const projectsRelations = relations(projects, ({ one }) => ({
   organization: one(organizations, {
     fields: [projects.organizationId],
     references: [organizations.id],
   }),
-}))
+}));

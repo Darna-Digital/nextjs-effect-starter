@@ -5,7 +5,10 @@ import { ProjectsMemory } from "@/features/project/layer/project.layer.memory";
 import { OrganizationsMemory } from "@/features/organization/layer/organization.layer.memory";
 import { Organizations } from "@/features/organization/service/organization.service";
 import { CurrentUser, type User } from "@/lib/effect/layers/auth";
-import type { Project, ProjectId } from "@/features/project/schema/project.schema.model";
+import type {
+  Project,
+  ProjectId,
+} from "@/features/project/schema/project.schema.model";
 import type { UserId } from "@/features/auth/schema/auth.schema.model";
 import type {
   Organization,
@@ -20,12 +23,6 @@ const orgA: Organization = {
   name: "Acme",
 };
 
-/**
- * Wire up all the context this service needs for a test:
- *   - Projects       (in-memory)
- *   - Organizations  (in-memory)  — Projects depends on it
- *   - CurrentUser    (per-test)   — who is making the call
- */
 const run = <A, E>(
   effect: Effect.Effect<A, E, Projects | Organizations | CurrentUser>,
   options?: {
@@ -76,10 +73,6 @@ describe("Projects.create", () => {
   });
 
   it("stamps the current user as the owner — identity comes from context", async () => {
-    // Same service call, different identity provided via Layer.succeed.
-    // This is Effect DI: Projects.create doesn't take a userId parameter;
-    // it reads `CurrentUser` from context, and tests swap the identity
-    // layer to prove the wiring.
     const asAlice = await run(
       Projects.create({ name: "Alpha", organizationId: orgA.id }),
       { organizations: [orgA], user: alice },
@@ -93,10 +86,6 @@ describe("Projects.create", () => {
     expect(Either.isRight(asBob) && asBob.right.ownerId).toBe(bob.id);
   });
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// list / mine — the payoff of the per-feature repository
-// ─────────────────────────────────────────────────────────────────────────────
 
 const orgB: Organization = {
   id: "org-b" as OrganizationId,
@@ -134,10 +123,9 @@ describe("Projects.list", () => {
   });
 
   it("filters by ownerId", async () => {
-    const result = await run(
-      Projects.list({ ownerId: alice.id as UserId }),
-      { projects: seed },
-    );
+    const result = await run(Projects.list({ ownerId: alice.id as UserId }), {
+      projects: seed,
+    });
     expect(Either.isRight(result)).toBe(true);
     if (Either.isRight(result)) {
       expect(result.right.map((p) => p.id).sort()).toEqual([
@@ -148,10 +136,9 @@ describe("Projects.list", () => {
   });
 
   it("filters by organizationId", async () => {
-    const result = await run(
-      Projects.list({ organizationId: orgA.id }),
-      { projects: seed },
-    );
+    const result = await run(Projects.list({ organizationId: orgA.id }), {
+      projects: seed,
+    });
     expect(Either.isRight(result)).toBe(true);
     if (Either.isRight(result)) {
       expect(result.right.map((p) => p.id).sort()).toEqual([

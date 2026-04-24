@@ -2,11 +2,6 @@ import { Effect, Ref } from "effect"
 import { ProjectNotFound, type Project } from "@/features/project/schema/project.schema.model"
 import type { ProjectRepo } from "@/features/project/repository/project.repository"
 
-/**
- * In-memory `ProjectRepository` — a `Ref<Project[]>` + `Array.filter`. One
- * place per feature to write this; takes less code than the generic
- * `Storage<T>` ever did.
- */
 export const createMemoryProjectRepository = (
   seed: readonly Project[] = [],
 ) =>

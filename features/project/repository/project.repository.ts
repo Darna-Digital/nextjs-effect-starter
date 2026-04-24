@@ -7,18 +7,7 @@ import {
 } from "@/lib/effect/layers/storage"
 import { ProjectNotFound, type Project, type ProjectId } from "@/features/project/schema/project.schema.model"
 
-/**
- * Project-specific repository — replaces the generic `Storage<T>`. Tailored
- * methods (`list(filter)`) let us push filtering down to the DB in prod and
- * keep the memory impl to a few lines for tests.
- *
- * The repo emits **domain** errors (`ProjectNotFound`) directly, so the
- * service stays thin — no `catchTag("EntityNotFound", ...)` ceremony.
- */
 export type ProjectFilter = {
-  // `| undefined` matches what `S.optional(...)` decodes to under
-  // `exactOptionalPropertyTypes: true` — lets the query schema flow straight
-  // into the repo without adapter code at the route.
   ownerId?: UserId | undefined
   organizationId?: OrganizationId | undefined
 }

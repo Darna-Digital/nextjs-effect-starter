@@ -1,17 +1,21 @@
-import { Effect } from "effect"
-import { eq, sql } from "drizzle-orm"
-import { db } from "@/lib/db/client"
-import { refreshTokens, users } from "@/lib/db/schema"
-import { DB_SPAN_ATTRS, StorageError, tryDb } from "@/lib/effect/layers/storage"
+import { Effect } from "effect";
+import { eq, sql } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { refreshTokens, users } from "@/lib/db/schema";
+import {
+  DB_SPAN_ATTRS,
+  StorageError,
+  tryDb,
+} from "@/lib/effect/layers/storage";
 import {
   RefreshTokenExpired,
   type RefreshTokenRecord,
   type UserRecord,
-} from "@/features/auth/schema/auth.schema.model"
+} from "@/features/auth/schema/auth.schema.model";
 import type {
   RefreshTokenRepo,
   UserRepo,
-} from "@/features/auth/repository/auth.repository"
+} from "@/features/auth/repository/auth.repository";
 
 export const createDbUserRepository: UserRepo = {
   findByEmail: (email) =>
@@ -19,27 +23,20 @@ export const createDbUserRepository: UserRepo = {
       db
         .select()
         .from(users)
-        // Emails are normalized (trim + lowercase) by the Email schema at
-        // the request edge, but use LOWER() for defense-in-depth across
-        // collations.
         .where(sql`LOWER(${users.email}) = LOWER(${email})`)
         .limit(1),
-    ).pipe(
-      Effect.map((rows) => (rows[0] as UserRecord | undefined) ?? null),
-    ),
+    ).pipe(Effect.map((rows) => (rows[0] as UserRecord | undefined) ?? null)),
 
   get: (id) =>
     tryDb("mysql.users.get", () =>
       db.select().from(users).where(eq(users.id, id)).limit(1),
-    ).pipe(
-      Effect.map((rows) => (rows[0] as UserRecord | undefined) ?? null),
-    ),
+    ).pipe(Effect.map((rows) => (rows[0] as UserRecord | undefined) ?? null)),
 
   create: (user) =>
-    tryDb("mysql.users.insert", () =>
-      db.insert(users).values(user),
-    ).pipe(Effect.as(user)),
-}
+    tryDb("mysql.users.insert", () => db.insert(users).values(user)).pipe(
+      Effect.as(user),
+    ),
+};
 
 export const createRefreshTokenRepository: RefreshTokenRepo = {
   create: (record) =>
@@ -49,15 +46,9 @@ export const createRefreshTokenRepository: RefreshTokenRepo = {
 
   get: (id) =>
     tryDb("mysql.refresh_tokens.get", () =>
-      db
-        .select()
-        .from(refreshTokens)
-        .where(eq(refreshTokens.id, id))
-        .limit(1),
+      db.select().from(refreshTokens).where(eq(refreshTokens.id, id)).limit(1),
     ).pipe(
-      Effect.map(
-        (rows) => (rows[0] as RefreshTokenRecord | undefined) ?? null,
-      ),
+      Effect.map((rows) => (rows[0] as RefreshTokenRecord | undefined) ?? null),
     ),
 
   remove: (id) =>
@@ -71,13 +62,11 @@ export const createRefreshTokenRepository: RefreshTokenRepo = {
         db.transaction(async (tx) => {
           const [result] = await tx
             .delete(refreshTokens)
-            .where(eq(refreshTokens.id, oldId))
-          // Both drizzle-mysql2 shapes in the wild: `{ affectedRows }` or
-          // `ResultSetHeader`. Coerce defensively.
+            .where(eq(refreshTokens.id, oldId));
           const affected =
-            (result as { affectedRows?: number })?.affectedRows ?? 0
-          if (affected === 0) throw new RefreshTokenExpired()
-          await tx.insert(refreshTokens).values(newRecord)
+            (result as { affectedRows?: number })?.affectedRows ?? 0;
+          if (affected === 0) throw new RefreshTokenExpired();
+          await tx.insert(refreshTokens).values(newRecord);
         }),
       catch: (cause) =>
         cause instanceof RefreshTokenExpired
@@ -90,4 +79,4 @@ export const createRefreshTokenRepository: RefreshTokenRepo = {
         }),
       )
       .pipe(Effect.asVoid),
-}
+};

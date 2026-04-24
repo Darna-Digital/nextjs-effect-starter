@@ -1,10 +1,13 @@
-"use client"
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Match, Schema as S } from "effect"
-import { getFetchError } from "@darna-digital/composable-fetcher"
-import { apiClient } from "@/features/auth/presentation/api-client"
-import { ProjectSchema, type ProjectId } from "@/features/project/schema/project.schema.model"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Match, Schema as S } from "effect";
+import { getFetchError } from "@darna-digital/composable-fetcher";
+import { apiClient } from "@/features/auth/presentation/api-client";
+import {
+  ProjectSchema,
+  type ProjectId,
+} from "@/features/project/schema/project.schema.model";
 import {
   CreateProjectSchema,
   UpdateProjectSchema,
@@ -12,34 +15,28 @@ import {
   type CreateProject,
   type UpdateProject,
   type ProjectApiError,
-} from "@/features/project/schema/project.schema.requests"
+} from "@/features/project/schema/project.schema.requests";
 
-const QUERY_KEY = ["projects"] as const
+const QUERY_KEY = ["projects"] as const;
 
-const projectListSchema = S.standardSchemaV1(S.Array(ProjectSchema))
-const projectSchema = S.standardSchemaV1(ProjectSchema)
-const createProjectSchema = S.standardSchemaV1(CreateProjectSchema)
-const updateProjectSchema = S.standardSchemaV1(UpdateProjectSchema)
+const projectListSchema = S.standardSchemaV1(S.Array(ProjectSchema));
+const projectSchema = S.standardSchemaV1(ProjectSchema);
+const createProjectSchema = S.standardSchemaV1(CreateProjectSchema);
+const updateProjectSchema = S.standardSchemaV1(UpdateProjectSchema);
 
-const projectApiErrorSchema = S.standardSchemaV1(ProjectApiErrorSchema)
+const projectApiErrorSchema = S.standardSchemaV1(ProjectApiErrorSchema);
 
-/**
- * Optional filter mirrors `ListProjectsQuerySchema` on the server. Passing
- * `{ ownerId: currentUser.id }` gives you "mine." Each field also accepts
- * `undefined` so the page can translate UI state → query shape without
- * stripping keys.
- */
 export type ProjectsFilter = {
-  ownerId?: string | undefined
-  organizationId?: string | undefined
-}
+  ownerId?: string | undefined;
+  organizationId?: string | undefined;
+};
 
 function buildProjectsUrl(filter: ProjectsFilter) {
-  const qs = new URLSearchParams()
-  if (filter.ownerId) qs.set("ownerId", filter.ownerId)
-  if (filter.organizationId) qs.set("organizationId", filter.organizationId)
-  const query = qs.toString()
-  return query ? `/api/projects?${query}` : "/api/projects"
+  const qs = new URLSearchParams();
+  if (filter.ownerId) qs.set("ownerId", filter.ownerId);
+  if (filter.organizationId) qs.set("organizationId", filter.organizationId);
+  const query = qs.toString();
+  return query ? `/api/projects?${query}` : "/api/projects";
 }
 
 export function useProjects(filter: ProjectsFilter = {}) {
@@ -50,7 +47,7 @@ export function useProjects(filter: ProjectsFilter = {}) {
         .url(buildProjectsUrl(filter))
         .schema(projectListSchema)
         .run("GET"),
-  })
+  });
 }
 
 export function useProject(id: ProjectId) {
@@ -62,11 +59,11 @@ export function useProject(id: ProjectId) {
         .schema(projectSchema)
         .errorSchema(projectApiErrorSchema)
         .run("GET"),
-  })
+  });
 }
 
 export function useCreateProject() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (input: CreateProject) =>
@@ -78,11 +75,11 @@ export function useCreateProject() {
         .body(input)
         .run("POST"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
-  })
+  });
 }
 
 export function useUpdateProject() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, input }: { id: ProjectId; input: UpdateProject }) =>
@@ -94,11 +91,11 @@ export function useUpdateProject() {
         .body(input)
         .run("PUT"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
-  })
+  });
 }
 
 export function useDeleteProject() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: ProjectId) =>
@@ -107,13 +104,13 @@ export function useDeleteProject() {
         .errorSchema(projectApiErrorSchema)
         .run("DELETE"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
-  })
+  });
 }
 
 export type ProjectFormError = {
-  field: "organizationId" | null
-  message: string
-}
+  field: "organizationId" | null;
+  message: string;
+};
 
 const matchApiError = Match.type<ProjectApiError>().pipe(
   Match.discriminator("error")("Not found", (e) => ({
@@ -133,21 +130,19 @@ const matchApiError = Match.type<ProjectApiError>().pipe(
     message: "Something went wrong on our side. Please try again.",
   })),
   Match.exhaustive,
-)
+);
 
-export function parseProjectError(
-  error: unknown,
-): ProjectFormError | null {
-  if (!error) return null
+export function parseProjectError(error: unknown): ProjectFormError | null {
+  if (!error) return null;
 
-  const fe = getFetchError<ProjectApiError>(error)
-  if (!fe) return { field: null, message: String(error) }
+  const fe = getFetchError<ProjectApiError>(error);
+  if (!fe) return { field: null, message: String(error) };
 
-  if (fe.type === "http" && fe.data) return matchApiError(fe.data)
+  if (fe.type === "http" && fe.data) return matchApiError(fe.data);
 
   if (fe.type === "network") {
-    return { field: null, message: "Network error. Check your connection." }
+    return { field: null, message: "Network error. Check your connection." };
   }
 
-  return { field: null, message: fe.message }
+  return { field: null, message: fe.message };
 }

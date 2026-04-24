@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useCurrentUser, useLogout } from "../hooks/use-auth"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCurrentUser, useLogout } from "../hooks/use-auth";
 
 export function AuthNav() {
-  const router = useRouter()
-  const { data: user, isLoading } = useCurrentUser()
-  const logout = useLogout()
+  const router = useRouter();
+  const { data: user, isLoading } = useCurrentUser();
+  const logout = useLogout();
 
-  if (isLoading) return null
+  if (isLoading) return null;
 
   if (!user) {
     return (
@@ -27,7 +27,7 @@ export function AuthNav() {
           Register
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -37,12 +37,12 @@ export function AuthNav() {
         onClick={() => {
           logout.mutate(undefined, {
             onSuccess: () => router.push("/login"),
-          })
+          });
         }}
         className="font-medium text-gray-700 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400"
       >
         Sign out
       </button>
     </div>
-  )
+  );
 }

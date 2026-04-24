@@ -9,21 +9,12 @@ import {
 import type { OrganizationFieldError } from "../hooks/use-organizations";
 
 type Props = {
-  /**
-   * Called on submit. Should return a promise — the form resets only
-   * when the promise resolves, so server-side errors stay visible with
-   * the user's input intact.
-   */
   onSubmit: (data: CreateOrganization) => Promise<unknown>;
   isPending?: boolean;
   submitError?: OrganizationFieldError | null;
-}
+};
 
-export function OrganizationForm({
-  onSubmit,
-  isPending,
-  submitError,
-}: Props) {
+export function OrganizationForm({ onSubmit, isPending, submitError }: Props) {
   const {
     register,
     handleSubmit,
@@ -37,10 +28,7 @@ export function OrganizationForm({
     try {
       await onSubmit(data);
       reset();
-    } catch {
-      // Keep the user's input so they can correct it; the parent renders
-      // the typed error via `submitError`.
-    }
+    } catch {}
   };
 
   const nameServerError =

@@ -1,28 +1,23 @@
-"use client"
+"use client";
 
-import type { Organization } from "@/features/organization/schema/organization.schema.model"
+import type { Organization } from "@/features/organization/schema/organization.schema.model";
 
-/**
- * Filter state for `useProjects`. Mirrors `ListProjectsQuerySchema` on the
- * server — each field optional; absent means "no constraint."
- */
 export type ProjectsFilterState = {
-  onlyMine: boolean
-  organizationId: string | null
-}
+  onlyMine: boolean;
+  organizationId: string | null;
+};
 
 export const emptyProjectsFilter: ProjectsFilterState = {
   onlyMine: false,
   organizationId: null,
-}
+};
 
 type Props = {
-  value: ProjectsFilterState
-  onChange: (next: ProjectsFilterState) => void
-  organizations: readonly Organization[]
-  /** When null, "Only mine" is disabled — there's no current user to match. */
-  currentUserId: string | null
-}
+  value: ProjectsFilterState;
+  onChange: (next: ProjectsFilterState) => void;
+  organizations: readonly Organization[];
+  currentUserId: string | null;
+};
 
 export function ProjectsFilterBar({
   value,
@@ -30,7 +25,7 @@ export function ProjectsFilterBar({
   organizations,
   currentUserId,
 }: Props) {
-  const active = value.onlyMine || value.organizationId !== null
+  const active = value.onlyMine || value.organizationId !== null;
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -38,6 +33,7 @@ export function ProjectsFilterBar({
         <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
           Organization
         </span>
+
         <select
           value={value.organizationId ?? ""}
           onChange={(e) =>
@@ -49,6 +45,7 @@ export function ProjectsFilterBar({
           className="rounded-md bg-white px-2 py-1 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500"
         >
           <option value="">All</option>
+
           {organizations.map((org) => (
             <option key={org.id} value={org.id}>
               {org.name}
@@ -84,7 +81,7 @@ export function ProjectsFilterBar({
         </button>
       )}
     </div>
-  )
+  );
 }
 
 /**
@@ -98,5 +95,5 @@ export function toProjectsQuery(
   return {
     ownerId: state.onlyMine && currentUserId ? currentUserId : undefined,
     organizationId: state.organizationId ?? undefined,
-  }
+  };
 }
