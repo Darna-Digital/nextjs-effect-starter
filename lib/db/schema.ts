@@ -1,18 +1,11 @@
 import { relations } from "drizzle-orm"
 import { mysqlTable, varchar } from "drizzle-orm/mysql-core"
-import type { OrganizationId } from "@/features/organization/schema/organization.schema.model"
-import type { ProjectId } from "@/features/project/schema/project.schema.model"
-import type { UserId } from "@/features/auth/schema/auth.schema.model"
 
 /**
- * MySQL tables for the whole app. Features don't import from here; only
- * the feature's `*.layers.live.ts` adapter does. This keeps model/service
- * code storage-agnostic — the only coupling back to features is the
- * branded ID types, which are pure TypeScript brands with no runtime cost.
- *
- * `.$type<XxxId>()` preserves each brand through Drizzle inference: the
- * DB column is plain `varchar`, but TypeScript sees it as the branded ID
- * end-to-end.
+ * MySQL tables for the whole app. Columns are plain `varchar` — feature
+ * repositories brand IDs at the boundary (row → domain type) so this file
+ * stays free of feature imports and the dependency graph flows one way:
+ * features → infra.
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,7 +13,7 @@ import type { UserId } from "@/features/auth/schema/auth.schema.model"
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const organizations = mysqlTable("organizations", {
-  id: varchar("id", { length: 36 }).primaryKey().$type<OrganizationId>(),
+  id: varchar("id", { length: 36 }).primaryKey(),
   // MySQL's default utf8mb4 collation is case-insensitive, so a UNIQUE
   // index here rejects "Acme" vs "acme" at the DB level — the race-safe
   // fallback if two concurrent creates slip past the service's pre-flight
@@ -34,17 +27,15 @@ export const organizations = mysqlTable("organizations", {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const projects = mysqlTable("projects", {
-  id: varchar("id", { length: 36 }).primaryKey().$type<ProjectId>(),
+  id: varchar("id", { length: 36 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: varchar("description", { length: 1024 }),
   organizationId: varchar("organization_id", { length: 36 })
     .notNull()
-    .references(() => organizations.id)
-    .$type<OrganizationId>(),
+    .references(() => organizations.id),
   ownerId: varchar("owner_id", { length: 36 })
     .notNull()
-    .references(() => users.id)
-    .$type<UserId>(),
+    .references(() => users.id),
   // ISO 8601 string to match the domain's `createdAt: S.String`. Swap to
   // `datetime` (with conversion) if SQL-level date queries are needed.
   createdAt: varchar("created_at", { length: 32 }).notNull(),
@@ -55,7 +46,7 @@ export const projects = mysqlTable("projects", {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const users = mysqlTable("users", {
-  id: varchar("id", { length: 36 }).primaryKey().$type<UserId>(),
+  id: varchar("id", { length: 36 }).primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   createdAt: varchar("created_at", { length: 32 }).notNull(),
@@ -72,8 +63,7 @@ export const refreshTokens = mysqlTable("refresh_tokens", {
   id: varchar("id", { length: 128 }).primaryKey(),
   userId: varchar("user_id", { length: 36 })
     .notNull()
-    .references(() => users.id)
-    .$type<UserId>(),
+    .references(() => users.id),
   expiresAt: varchar("expires_at", { length: 32 }).notNull(),
   createdAt: varchar("created_at", { length: 32 }).notNull(),
 })

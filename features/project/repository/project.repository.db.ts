@@ -28,13 +28,13 @@ export const createDbProjectRepository: ProjectRepo = {
             .from(projects)
             .where(and(...conditions))
         : db.select().from(projects)
-    }).pipe(Effect.map((rows) => rows.map(stripNulls))),
+    }).pipe(Effect.map((rows) => rows.map((r) => stripNulls<Project>(r)))),
 
   get: (id) =>
     Effect.gen(function* () {
       const row = yield* findOne(id)
       if (!row) return yield* Effect.fail(new ProjectNotFound({ id }))
-      return stripNulls(row)
+      return stripNulls<Project>(row)
     }),
 
   create: (project) =>

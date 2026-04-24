@@ -27,13 +27,13 @@ export const createDbOrganizationRepository: OrganizationRepo = {
   list: () =>
     tryDb("mysql.organizations.list", () =>
       db.select().from(organizations),
-    ).pipe(Effect.map((rows) => rows.map(stripNulls))),
+    ).pipe(Effect.map((rows) => rows.map((r) => stripNulls<Organization>(r)))),
 
   get: (id) =>
     Effect.gen(function* () {
       const row = yield* findOne(id)
       if (!row) return yield* Effect.fail(new OrganizationNotFound({ id }))
-      return stripNulls(row)
+      return stripNulls<Organization>(row)
     }),
 
   create: (org) =>
@@ -77,7 +77,7 @@ export const createDbOrganizationRepository: OrganizationRepo = {
       )
       const updated = yield* findOne(id)
       if (!updated) return yield* Effect.fail(new OrganizationNotFound({ id }))
-      return stripNulls(updated)
+      return stripNulls<Organization>(updated)
     }),
 
   remove: (id) =>

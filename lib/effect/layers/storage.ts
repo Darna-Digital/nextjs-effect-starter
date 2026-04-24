@@ -51,27 +51,21 @@ export const tryDb = <A>(name: string, run: () => Promise<A>) =>
   }).pipe(Effect.withSpan(name, { attributes: DB_SPAN_ATTRS }))
 
 /**
- * `null`-bearing keys become optional (matching `S.optional`); every
- * other key keeps its type.
- */
-type StripNulls<T> = {
-  [K in keyof T as null extends T[K] ? K : never]?: Exclude<T[K], null>
-} & {
-  [K in keyof T as null extends T[K] ? never : K]: T[K]
-}
-
-/**
  * Drizzle returns `null` for absent nullable columns; our schemas use
  * `S.optional(...)` (expects `undefined`). Strip nulls on read so the
  * domain shape matches across backends.
+ *
+ * The target type is supplied explicitly — this is also where ID columns
+ * get re-branded from plain `string` (storage) to the feature's branded
+ * ID (domain). Repositories are the only place that cross this boundary.
  */
-export const stripNulls = <T extends object>(row: T): StripNulls<T> => {
+export const stripNulls = <T>(row: object): T => {
   const out: Record<string, unknown> = {}
   for (const key in row) {
-    const value = row[key as keyof T]
+    const value = (row as Record<string, unknown>)[key]
     if (value !== null) out[key] = value
   }
-  return out as StripNulls<T>
+  return out as T
 }
 
 /**
