@@ -1,6 +1,6 @@
 import { Effect } from "effect"
 import { apiRoute } from "@/lib/effect/http/api-route"
-import { requireUser } from "@/features/auth/auth.http"
+import { applyAuthMiddleware } from "@/features/auth/auth.http"
 import {
   CreateProjectSchema,
   ListProjectsQuerySchema,
@@ -12,7 +12,7 @@ export const GET = apiRoute({
   query: ListProjectsQuerySchema,
   handle: ({ query }) =>
     Effect.gen(function* () {
-      yield* requireUser
+      yield* applyAuthMiddleware
       return yield* Projects.list(query)
     }),
 })
@@ -23,7 +23,7 @@ export const POST = apiRoute({
   status: 201,
   handle: ({ body }) =>
     Effect.gen(function* () {
-      yield* requireUser
+      yield* applyAuthMiddleware
       return yield* Projects.create(body)
     }),
 })

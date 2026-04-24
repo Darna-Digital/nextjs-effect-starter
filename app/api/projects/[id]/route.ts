@@ -1,6 +1,6 @@
 import { Effect, Schema as S } from "effect"
 import { apiRoute } from "@/lib/effect/http/api-route"
-import { requireUser } from "@/features/auth/auth.http"
+import { applyAuthMiddleware } from "@/features/auth/auth.http"
 import { ProjectId } from "@/features/project/schema/project.schema.model"
 import { UpdateProjectSchema } from "@/features/project/schema/project.schema.requests"
 import { Projects } from "@/features/project/service/project.service"
@@ -12,7 +12,7 @@ export const GET = apiRoute({
   params: Params,
   handle: ({ params }) =>
     Effect.gen(function* () {
-      yield* requireUser
+      yield* applyAuthMiddleware
       return yield* Projects.getById(params.id)
     }),
 })
@@ -23,7 +23,7 @@ export const PUT = apiRoute({
   body: UpdateProjectSchema,
   handle: ({ params, body }) =>
     Effect.gen(function* () {
-      yield* requireUser
+      yield* applyAuthMiddleware
       return yield* Projects.update(params.id, body)
     }),
 })
@@ -34,7 +34,7 @@ export const DELETE = apiRoute({
   status: 204,
   handle: ({ params }) =>
     Effect.gen(function* () {
-      yield* requireUser
+      yield* applyAuthMiddleware
       yield* Projects.remove(params.id)
     }),
 })

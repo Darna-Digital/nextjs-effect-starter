@@ -134,7 +134,7 @@ const parseCookie = (
  * Fails with `NotAuthenticated` (→ 401) when the request has no valid
  * session. Use inside `handle:` on any protected route.
  */
-export const requireUser = Effect.gen(function* () {
+export const applyAuthMiddleware = Effect.gen(function* () {
   const user = yield* CurrentUser
   if (user.id === ANONYMOUS_USER.id)
     return yield* Effect.fail(new NotAuthenticated())
