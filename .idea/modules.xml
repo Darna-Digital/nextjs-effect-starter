@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/learning-effect.iml" filepath="$PROJECT_DIR$/.idea/learning-effect.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/nextjs-effect-starter.iml" filepath="$PROJECT_DIR$/.idea/nextjs-effect-starter.iml" />
     </modules>
   </component>
 </project>
