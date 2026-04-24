@@ -1,6 +1,5 @@
 import { Effect, Layer } from "effect"
 import { cookies } from "next/headers"
-import { config } from "@/lib/effect/config"
 import { RequestUserResolver } from "@/lib/effect/http/request-user"
 import { CurrentUser, type User } from "@/lib/effect/layers/auth"
 import {
@@ -35,22 +34,34 @@ const REFRESH_COOKIE = "refresh_token"
  */
 const ACCESS_COOKIE_MAX_AGE = 7 * 24 * 60 * 60
 
+/**
+ * Matches the refresh-token TTL configured for the `Auth` service. The
+ * default (1 week) lives in two spots: here, and in `auth.layer.live.ts`
+ * when it reads the same env var. Keep them in sync — or set the env
+ * var explicitly and the duplication becomes moot.
+ */
+const REFRESH_COOKIE_MAX_AGE = Number(
+  process.env.AUTH_REFRESH_TOKEN_TTL_SECONDS ?? 7 * 24 * 60 * 60,
+)
+
+const isProd = process.env.NODE_ENV === "production"
+
 const setAuthCookies = (accessToken: string, refreshToken: string) =>
   Effect.promise(async () => {
     const jar = await cookies()
     jar.set(ACCESS_COOKIE, accessToken, {
       httpOnly: true,
       sameSite: "lax",
-      secure: config.isProduction,
+      secure: isProd,
       path: "/",
       maxAge: ACCESS_COOKIE_MAX_AGE,
     })
     jar.set(REFRESH_COOKIE, refreshToken, {
       httpOnly: true,
       sameSite: "lax",
-      secure: config.isProduction,
+      secure: isProd,
       path: "/api/auth",
-      maxAge: config.refreshTokenTtlSeconds,
+      maxAge: REFRESH_COOKIE_MAX_AGE,
     })
   })
 
