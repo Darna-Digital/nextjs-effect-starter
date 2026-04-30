@@ -1,5 +1,4 @@
 import { Context, Effect } from "effect"
-import type { UserId } from "@/features/auth/schema/auth.schema.model"
 import type { OrganizationId } from "@/features/organization/schema/organization.schema.model"
 import {
   StorageError,
@@ -8,7 +7,7 @@ import {
 import { ProjectNotFound, type Project, type ProjectId } from "@/features/project/schema/project.schema.model"
 
 export type ProjectFilter = {
-  ownerId?: UserId | undefined
+  ownerId?: string | undefined
   organizationId?: OrganizationId | undefined
 }
 

@@ -3,7 +3,6 @@ import { StorageError } from "@/lib/effect/layers/storage";
 import {
   RefreshTokenExpired,
   type RefreshTokenRecord,
-  type UserId,
   type UserRecord,
 } from "@/features/auth/schema/auth.schema.model";
 
@@ -11,7 +10,7 @@ export interface UserRepo {
   findByEmail: (
     email: string,
   ) => Effect.Effect<UserRecord | null, StorageError>;
-  get: (id: UserId) => Effect.Effect<UserRecord | null, StorageError>;
+  get: (id: string) => Effect.Effect<UserRecord | null, StorageError>;
   create: (user: UserRecord) => Effect.Effect<UserRecord, StorageError>;
 }
 
