@@ -1,5 +1,5 @@
 import { Context, Effect } from "effect";
-import { sendEmail } from "@/lib/auth/email";
+import { Email } from "@/lib/effect/layers/email";
 import { ProjectRepository } from "@/features/project/repository/project.repository";
 import type { ProjectId } from "@/features/project/schema/project.schema.model";
 
@@ -15,6 +15,7 @@ import type { ProjectId } from "@/features/project/schema/project.schema.model";
  */
 const make = Effect.gen(function* () {
   const repo = yield* ProjectRepository;
+  const email = yield* Email;
 
   return {
     /** Flip a freshly-created project from "provisioning" to "active". */
@@ -30,13 +31,11 @@ const make = Effect.gen(function* () {
     notifyOwner: (id: ProjectId) =>
       Effect.gen(function* () {
         const project = yield* repo.get(id);
-        yield* Effect.sync(() =>
-          sendEmail({
-            to: project.ownerId,
-            subject: `Project "${project.name}" is ready`,
-            text: `Your project "${project.name}" (${project.id}) has finished provisioning and is now active.`,
-          }),
-        );
+        yield* email.send({
+          to: project.ownerId,
+          subject: `Project "${project.name}" is ready`,
+          text: `Your project "${project.name}" (${project.id}) has finished provisioning and is now active.`,
+        });
         yield* Effect.logInfo("Project provisioning notification sent").pipe(
           Effect.annotateLogs({
             "project.id": id,

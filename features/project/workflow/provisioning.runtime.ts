@@ -1,5 +1,6 @@
 import { Layer } from "effect";
 import { makeWorkflowRuntime } from "@/lib/effect/workflow/runtime";
+import { EmailConsole } from "@/lib/effect/layers/email";
 import { ProjectRepository } from "@/features/project/repository/project.repository";
 import { createDbProjectRepository } from "@/features/project/repository/project.repository.db";
 import { ProjectNotFound } from "@/features/project/schema/project.schema.model";
@@ -11,7 +12,12 @@ import { Provisioning } from "@/features/project/service/provisioning.service";
  * can't introduce an import cycle with the workflow definition.
  */
 const ProvisioningLive = Layer.effect(Provisioning, Provisioning.make).pipe(
-  Layer.provide(Layer.succeed(ProjectRepository, createDbProjectRepository)),
+  Layer.provide(
+    Layer.mergeAll(
+      Layer.succeed(ProjectRepository, createDbProjectRepository),
+      EmailConsole,
+    ),
+  ),
 );
 
 /**
