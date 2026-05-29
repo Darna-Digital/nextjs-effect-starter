@@ -5,12 +5,6 @@ import {
   NotAuthenticated,
 } from "@/features/auth/http/auth.middleware";
 
-/**
- * Server-side implementation of the {@link Authentication} middleware. Rebuilds
- * a cookie header from the session token and validates it against the same
- * Better Auth instance that serves `/api/auth/*` via `auth.api.getSession`,
- * providing the resolved user as `CurrentUser`.
- */
 export const AuthenticationLive = Layer.succeed(
   Authentication,
   Authentication.of({
@@ -26,9 +20,19 @@ export const AuthenticationLive = Layer.succeed(
       }).pipe(
         Effect.flatMap((session) =>
           session?.user
-            ? Effect.succeed(session.user)
+            ? Effect.as(
+                Effect.annotateCurrentSpan({
+                  "auth.authenticated": true,
+                  "auth.user.id": session.user.id,
+                }),
+                session.user,
+              )
             : Effect.fail(new NotAuthenticated()),
         ),
+
+        Effect.withSpan("Auth.getSession", {
+          attributes: { "auth.provider": "better-auth" },
+        }),
       ),
   }),
 );
