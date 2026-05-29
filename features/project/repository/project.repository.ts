@@ -26,7 +26,7 @@ export interface ProjectRepo {
   ) => Effect.Effect<void, ProjectNotFound | StorageError>
 }
 
-export class ProjectRepository extends Context.Tag("ProjectRepository")<
+export class ProjectRepository extends Context.Service<
   ProjectRepository,
   ProjectRepo
->() {}
+>()("ProjectRepository") {}

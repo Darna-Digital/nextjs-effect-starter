@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Inter, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { AuthNav } from "@/features/auth/presentation/components/auth-nav";
+import { ModeToggle } from "@/components/mode-toggle";
 import "./globals.css";
 
 // Registered as `--font-sans` so the `font-sans` utility (mapped in globals.css)
@@ -30,6 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
@@ -51,7 +53,10 @@ export default function RootLayout({
               >
                 Projects
               </Link>
-              <AuthNav />
+              <div className="ml-auto flex items-center gap-x-3">
+                <AuthNav />
+                <ModeToggle />
+              </div>
             </div>
           </nav>
           {children}

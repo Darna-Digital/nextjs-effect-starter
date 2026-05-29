@@ -1,4 +1,4 @@
-import { OpenApi } from "@effect/platform";
+import { OpenApi } from "effect/unstable/httpapi";
 import { Api } from "@/lib/effect/http/api";
 
 // Derived once from the HttpApi definition. This is the source of truth for

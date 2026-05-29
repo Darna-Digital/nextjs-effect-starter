@@ -3,12 +3,12 @@ import { OrganizationName } from "@/features/organization/schema/organization.sc
 
 export const CreateOrganizationSchema = S.Struct({
   name: OrganizationName,
-  description: S.optionalWith(S.String, { exact: true }),
+  description: S.optionalKey(S.String),
 });
 export type CreateOrganization = typeof CreateOrganizationSchema.Type;
 
 export const UpdateOrganizationSchema = S.Struct({
-  name: S.optionalWith(OrganizationName, { exact: true }),
-  description: S.optionalWith(S.String, { exact: true }),
+  name: S.optionalKey(OrganizationName),
+  description: S.optionalKey(S.String),
 });
 export type UpdateOrganization = typeof UpdateOrganizationSchema.Type;

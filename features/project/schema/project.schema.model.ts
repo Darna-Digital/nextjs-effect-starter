@@ -1,11 +1,10 @@
 import { Schema as S } from "effect";
-import { HttpApiSchema } from "@effect/platform";
 import { OrganizationId } from "@/features/organization/schema/organization.schema.model";
 
 export const ProjectId = S.String.pipe(S.brand("ProjectId"));
 export type ProjectId = typeof ProjectId.Type;
 
-export const ProjectName = S.Trim.pipe(S.minLength(1));
+export const ProjectName = S.Trim.pipe(S.check(S.isMinLength(1)));
 
 export const ProjectSchema = S.Struct({
   id: ProjectId,
@@ -17,8 +16,8 @@ export const ProjectSchema = S.Struct({
 });
 export type Project = typeof ProjectSchema.Type;
 
-export class ProjectNotFound extends S.TaggedError<ProjectNotFound>()(
+export class ProjectNotFound extends S.TaggedErrorClass<ProjectNotFound>()(
   "ProjectNotFound",
   { id: ProjectId },
-  HttpApiSchema.annotations({ status: 404 }),
+  { httpApiStatus: 404 },
 ) {}

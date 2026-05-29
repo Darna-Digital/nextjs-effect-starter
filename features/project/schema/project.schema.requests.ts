@@ -4,18 +4,18 @@ import { ProjectName } from "@/features/project/schema/project.schema.model";
 
 export const CreateProjectSchema = S.Struct({
   name: ProjectName,
-  description: S.optionalWith(S.String, { exact: true }),
+  description: S.optionalKey(S.String),
   organizationId: OrganizationId,
 });
 export type CreateProject = typeof CreateProjectSchema.Type;
 
 export const UpdateProjectSchema = S.Struct({
-  name: S.optionalWith(ProjectName, { exact: true }),
-  description: S.optionalWith(S.String, { exact: true }),
+  name: S.optionalKey(ProjectName),
+  description: S.optionalKey(S.String),
 });
 export type UpdateProject = typeof UpdateProjectSchema.Type;
 
 export const ListProjectsQuerySchema = S.Struct({
-  ownerId: S.optionalWith(S.String, { exact: true }),
-  organizationId: S.optionalWith(OrganizationId, { exact: true }),
+  ownerId: S.optionalKey(S.String),
+  organizationId: S.optionalKey(OrganizationId),
 });

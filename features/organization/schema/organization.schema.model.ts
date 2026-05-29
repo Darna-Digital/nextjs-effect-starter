@@ -1,10 +1,9 @@
 import { Schema as S } from "effect";
-import { HttpApiSchema } from "@effect/platform";
 
 export const OrganizationId = S.String.pipe(S.brand("OrganizationId"));
 export type OrganizationId = typeof OrganizationId.Type;
 
-export const OrganizationName = S.Trim.pipe(S.minLength(1));
+export const OrganizationName = S.Trim.pipe(S.check(S.isMinLength(1)));
 
 export const OrganizationSchema = S.Struct({
   id: OrganizationId,
@@ -13,26 +12,28 @@ export const OrganizationSchema = S.Struct({
 });
 export type Organization = typeof OrganizationSchema.Type;
 
-export class OrganizationNotFound extends S.TaggedError<OrganizationNotFound>()(
+// `httpApiStatus` is the annotation the HttpApi layer reads for the response
+// status (equivalent to `HttpApiSchema.status(code)`).
+export class OrganizationNotFound extends S.TaggedErrorClass<OrganizationNotFound>()(
   "OrganizationNotFound",
   { id: OrganizationId },
-  HttpApiSchema.annotations({ status: 404 }),
+  { httpApiStatus: 404 },
 ) {}
 
-export class OrganizationNameTaken extends S.TaggedError<OrganizationNameTaken>()(
+export class OrganizationNameTaken extends S.TaggedErrorClass<OrganizationNameTaken>()(
   "OrganizationNameTaken",
   { name: S.String },
-  HttpApiSchema.annotations({ status: 409 }),
+  { httpApiStatus: 409 },
 ) {}
 
-export class OrganizationNameReserved extends S.TaggedError<OrganizationNameReserved>()(
+export class OrganizationNameReserved extends S.TaggedErrorClass<OrganizationNameReserved>()(
   "OrganizationNameReserved",
   { name: S.String },
-  HttpApiSchema.annotations({ status: 409 }),
+  { httpApiStatus: 409 },
 ) {}
 
-export class OrganizationInUse extends S.TaggedError<OrganizationInUse>()(
+export class OrganizationInUse extends S.TaggedErrorClass<OrganizationInUse>()(
   "OrganizationInUse",
   { id: OrganizationId },
-  HttpApiSchema.annotations({ status: 409 }),
+  { httpApiStatus: 409 },
 ) {}

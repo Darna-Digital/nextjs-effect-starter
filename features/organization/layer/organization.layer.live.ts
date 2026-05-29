@@ -6,7 +6,10 @@ import {
   ReservedOrganizationNames,
 } from "@/features/organization/service/organization.service";
 
-export const OrganizationsLive = Organizations.Default.pipe(
+export const OrganizationsLive = Layer.effect(
+  Organizations,
+  Organizations.make,
+).pipe(
   Layer.provide(
     Layer.mergeAll(
       Layer.succeed(OrganizationRepository, createDbOrganizationRepository),

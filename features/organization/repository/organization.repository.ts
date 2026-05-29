@@ -31,6 +31,7 @@ export interface OrganizationRepo {
   >;
 }
 
-export class OrganizationRepository extends Context.Tag(
-  "OrganizationRepository",
-)<OrganizationRepository, OrganizationRepo>() {}
+export class OrganizationRepository extends Context.Service<
+  OrganizationRepository,
+  OrganizationRepo
+>()("OrganizationRepository") {}

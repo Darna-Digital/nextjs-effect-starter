@@ -8,12 +8,11 @@ import {
   Ref,
   Schema as S,
 } from "effect";
-import { HttpApiSchema } from "@effect/platform";
 
-export class TooManyRequests extends S.TaggedError<TooManyRequests>()(
+export class TooManyRequests extends S.TaggedErrorClass<TooManyRequests>()(
   "TooManyRequests",
   { retryAfter: S.Number },
-  HttpApiSchema.annotations({ status: 429 }),
+  { httpApiStatus: 429 },
 ) {}
 
 export type RateLimitConfig = {
@@ -24,14 +23,14 @@ export type RateLimitConfig = {
 
 type Bucket = { readonly count: number; readonly resetAt: number };
 
-export class RateLimiter extends Context.Tag("RateLimiter")<
+export class RateLimiter extends Context.Service<
   RateLimiter,
   {
     readonly check: (
       config: RateLimitConfig,
     ) => Effect.Effect<void, TooManyRequests>;
   }
->() {}
+>()("RateLimiter") {}
 
 export const RateLimiterLive = Layer.effect(
   RateLimiter,

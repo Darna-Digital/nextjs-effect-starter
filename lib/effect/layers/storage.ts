@@ -1,10 +1,9 @@
 import { Effect, Schema as S } from "effect";
-import { HttpApiSchema } from "@effect/platform";
 
-export class StorageError extends S.TaggedError<StorageError>()(
+export class StorageError extends S.TaggedErrorClass<StorageError>()(
   "StorageError",
   {},
-  HttpApiSchema.annotations({ status: 500 }),
+  { httpApiStatus: 500 },
 ) {}
 
 /** Logs the underlying cause and produces a wire-safe StorageError. */

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Effect, Either, Layer, TestClock, TestContext } from "effect";
+import { Effect, Layer, Result } from "effect";
+import { TestClock } from "effect/testing";
 import {
   RateLimiter,
   RateLimiterLive,
@@ -11,8 +12,8 @@ function run<Success, Failure>(
 ) {
   return Effect.runPromise(
     effect.pipe(
-      Effect.either,
-      Effect.provide(Layer.mergeAll(RateLimiterLive, TestContext.TestContext)),
+      Effect.result,
+      Effect.provide(Layer.mergeAll(RateLimiterLive, TestClock.layer())),
     ),
   );
 }
@@ -27,7 +28,7 @@ describe("RateLimiter.check — window behaviour", () => {
         for (let i = 0; i < config.max; i++) yield* limiter.check(config);
       }),
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
   });
 
   it("rejects the (max+1)-th request with TooManyRequests", async () => {
@@ -38,9 +39,9 @@ describe("RateLimiter.check — window behaviour", () => {
         yield* limiter.check(config);
       }),
     );
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left._tag).toBe("TooManyRequests");
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure._tag).toBe("TooManyRequests");
     }
   });
 
@@ -52,9 +53,9 @@ describe("RateLimiter.check — window behaviour", () => {
         return yield* limiter.check(config);
       }),
     );
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result) && result.left._tag === "TooManyRequests") {
-      expect(result.left.retryAfter).toBe(1);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result) && result.failure._tag === "TooManyRequests") {
+      expect(result.failure.retryAfter).toBe(1);
     }
   });
 
@@ -64,17 +65,17 @@ describe("RateLimiter.check — window behaviour", () => {
         const limiter = yield* RateLimiter;
         for (let i = 0; i < config.max; i++) yield* limiter.check(config);
         return yield* Effect.all([
-          Effect.either(limiter.check(config)),
-          Effect.either(limiter.check(config)),
-          Effect.either(limiter.check(config)),
+          Effect.result(limiter.check(config)),
+          Effect.result(limiter.check(config)),
+          Effect.result(limiter.check(config)),
         ]);
       }),
     );
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      for (const r of result.right) {
-        expect(Either.isLeft(r)).toBe(true);
-        if (Either.isLeft(r)) expect(r.left._tag).toBe("TooManyRequests");
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      for (const r of result.success) {
+        expect(Result.isFailure(r)).toBe(true);
+        if (Result.isFailure(r)) expect(r.failure._tag).toBe("TooManyRequests");
       }
     }
   });
@@ -88,7 +89,7 @@ describe("RateLimiter.check — window behaviour", () => {
         for (let i = 0; i < config.max; i++) yield* limiter.check(config);
       }),
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
   });
 
   it("still rejects during the window, even just before it expires", async () => {
@@ -100,9 +101,9 @@ describe("RateLimiter.check — window behaviour", () => {
         return yield* limiter.check(config);
       }),
     );
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left._tag).toBe("TooManyRequests");
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure._tag).toBe("TooManyRequests");
     }
   });
 });
@@ -118,7 +119,7 @@ describe("RateLimiter.check — key isolation", () => {
           yield* limiter.check({ ...config, key: "b" });
       }),
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
   });
 
   it("rejects on `a` while `b` is still allowed", async () => {
@@ -127,19 +128,19 @@ describe("RateLimiter.check — key isolation", () => {
         const limiter = yield* RateLimiter;
         for (let i = 0; i < config.max; i++)
           yield* limiter.check({ ...config, key: "a" });
-        const aRejection = yield* Effect.either(
+        const aRejection = yield* Effect.result(
           limiter.check({ ...config, key: "a" }),
         );
-        const bSuccess = yield* Effect.either(
+        const bSuccess = yield* Effect.result(
           limiter.check({ ...config, key: "b" }),
         );
         return { aRejection, bSuccess };
       }),
     );
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(Either.isLeft(result.right.aRejection)).toBe(true);
-      expect(Either.isRight(result.right.bSuccess)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(Result.isFailure(result.success.aRejection)).toBe(true);
+      expect(Result.isSuccess(result.success.bSuccess)).toBe(true);
     }
   });
 });
@@ -151,21 +152,21 @@ describe("RateLimiter.check — varying limits", () => {
         const limiter = yield* RateLimiter;
         for (let i = 0; i < 10; i++)
           yield* limiter.check({ key: "login", max: 10, windowMs: 60_000 });
-        const overLogin = yield* Effect.either(
+        const overLogin = yield* Effect.result(
           limiter.check({ key: "login", max: 10, windowMs: 60_000 }),
         );
         for (let i = 0; i < 5; i++)
           yield* limiter.check({ key: "register", max: 5, windowMs: 60_000 });
-        const overRegister = yield* Effect.either(
+        const overRegister = yield* Effect.result(
           limiter.check({ key: "register", max: 5, windowMs: 60_000 }),
         );
         return { overLogin, overRegister };
       }),
     );
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(Either.isLeft(result.right.overLogin)).toBe(true);
-      expect(Either.isLeft(result.right.overRegister)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(Result.isFailure(result.success.overLogin)).toBe(true);
+      expect(Result.isFailure(result.success.overRegister)).toBe(true);
     }
   });
 });

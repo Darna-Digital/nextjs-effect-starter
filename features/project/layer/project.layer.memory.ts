@@ -7,7 +7,7 @@ import { Projects } from "@/features/project/service/project.service";
 export const ProjectsMemory = ({
   seed = [],
 }: { seed?: readonly Project[] } = {}) =>
-  Projects.Default.pipe(
+  Layer.effect(Projects, Projects.make).pipe(
     Layer.provide(
       Layer.effect(ProjectRepository, createMemoryProjectRepository(seed)),
     ),

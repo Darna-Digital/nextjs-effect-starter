@@ -1,4 +1,5 @@
-import { HttpApiBuilder } from "@effect/platform";
+import { Effect } from "effect";
+import { HttpApiBuilder } from "effect/unstable/httpapi";
 import { Api } from "@/lib/effect/http/api";
 import { Organizations } from "@/features/organization/service/organization.service";
 
@@ -7,11 +8,17 @@ export const OrganizationHandlers = HttpApiBuilder.group(
   "organizations",
   (handlers) =>
     handlers
-      .handle("list", () => Organizations.list())
-      .handle("create", ({ payload }) => Organizations.create(payload))
-      .handle("getById", ({ path }) => Organizations.getById(path.id))
-      .handle("update", ({ path, payload }) =>
-        Organizations.update(path.id, payload),
+      .handle("list", () => Effect.flatMap(Organizations, (s) => s.list()))
+      .handle("create", ({ payload }) =>
+        Effect.flatMap(Organizations, (s) => s.create(payload)),
       )
-      .handle("remove", ({ path }) => Organizations.remove(path.id)),
+      .handle("getById", ({ params }) =>
+        Effect.flatMap(Organizations, (s) => s.getById(params.id)),
+      )
+      .handle("update", ({ params, payload }) =>
+        Effect.flatMap(Organizations, (s) => s.update(params.id, payload)),
+      )
+      .handle("remove", ({ params }) =>
+        Effect.flatMap(Organizations, (s) => s.remove(params.id)),
+      ),
 );

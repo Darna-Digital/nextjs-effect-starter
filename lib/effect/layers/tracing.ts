@@ -1,6 +1,6 @@
-import { OtlpTracer, OtlpSerialization } from "@effect/opentelemetry";
-import { NodeHttpClient } from "@effect/platform-node";
 import { Layer } from "effect";
+import { OtlpSerialization, OtlpTracer } from "effect/unstable/observability";
+import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 
 const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
 

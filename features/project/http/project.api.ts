@@ -1,4 +1,4 @@
-import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "@effect/platform";
+import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
 import { Schema as S } from "effect";
 import { StorageError } from "@/lib/effect/layers/storage";
 import { Authentication } from "@/features/auth/http/auth.middleware";
@@ -18,38 +18,39 @@ const IdParam = S.Struct({ id: ProjectId });
 
 export class ProjectApi extends HttpApiGroup.make("projects")
   .add(
-    HttpApiEndpoint.get("list", "/projects")
-      .setUrlParams(ListProjectsQuerySchema)
-      .addSuccess(S.Array(ProjectSchema))
-      .addError(StorageError),
+    HttpApiEndpoint.get("list", "/projects", {
+      query: ListProjectsQuerySchema,
+      success: S.Array(ProjectSchema),
+      error: StorageError,
+    }),
   )
   .add(
-    HttpApiEndpoint.post("create", "/projects")
-      .setPayload(CreateProjectSchema)
-      .addSuccess(ProjectSchema, { status: 201 })
-      .addError(OrganizationNotFound)
-      .addError(StorageError),
+    HttpApiEndpoint.post("create", "/projects", {
+      payload: CreateProjectSchema,
+      success: ProjectSchema.pipe(HttpApiSchema.status(201)),
+      error: [OrganizationNotFound, StorageError],
+    }),
   )
   .add(
-    HttpApiEndpoint.get("getById", "/projects/:id")
-      .setPath(IdParam)
-      .addSuccess(ProjectSchema)
-      .addError(ProjectNotFound)
-      .addError(StorageError),
+    HttpApiEndpoint.get("getById", "/projects/:id", {
+      params: IdParam,
+      success: ProjectSchema,
+      error: [ProjectNotFound, StorageError],
+    }),
   )
   .add(
-    HttpApiEndpoint.put("update", "/projects/:id")
-      .setPath(IdParam)
-      .setPayload(UpdateProjectSchema)
-      .addSuccess(ProjectSchema)
-      .addError(ProjectNotFound)
-      .addError(StorageError),
+    HttpApiEndpoint.put("update", "/projects/:id", {
+      params: IdParam,
+      payload: UpdateProjectSchema,
+      success: ProjectSchema,
+      error: [ProjectNotFound, StorageError],
+    }),
   )
   .add(
-    HttpApiEndpoint.del("remove", "/projects/:id")
-      .setPath(IdParam)
-      .addSuccess(HttpApiSchema.NoContent)
-      .addError(ProjectNotFound)
-      .addError(StorageError),
+    HttpApiEndpoint.delete("remove", "/projects/:id", {
+      params: IdParam,
+      success: HttpApiSchema.NoContent,
+      error: [ProjectNotFound, StorageError],
+    }),
   )
   .middleware(Authentication) {}

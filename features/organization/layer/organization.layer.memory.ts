@@ -14,7 +14,7 @@ export const OrganizationsMemory = ({
   seed?: readonly Organization[];
   reserved?: readonly string[];
 } = {}) =>
-  Organizations.Default.pipe(
+  Layer.effect(Organizations, Organizations.make).pipe(
     Layer.provide(
       Layer.mergeAll(
         Layer.effect(
