@@ -48,10 +48,14 @@ describe("Organizations.update", () => {
   it.effect("rejects renaming to a reserved name", () =>
     Effect.gen(function* () {
       const orgs = yield* Organizations;
-      const error = yield* Effect.flip(orgs.update(orgA.id, { name: "System" }));
+      const error = yield* Effect.flip(
+        orgs.update(orgA.id, { name: "System" }),
+      );
       expect(error._tag).toBe("OrganizationNameReserved");
     }).pipe(
-      Effect.provide(OrganizationsMemory({ seed: [orgA], reserved: ["system"] })),
+      Effect.provide(
+        OrganizationsMemory({ seed: [orgA], reserved: ["system"] }),
+      ),
     ),
   );
 
@@ -63,16 +67,18 @@ describe("Organizations.update", () => {
     }).pipe(Effect.provide(OrganizationsMemory({ seed: [orgA, orgB] }))),
   );
 
-  it.effect("allows an org to keep its own name (self-match is not a conflict)", () =>
-    Effect.gen(function* () {
-      const orgs = yield* Organizations;
-      const updated = yield* orgs.update(orgA.id, {
-        name: "Acme",
-        description: "renamed desc",
-      });
-      expect(updated.name).toBe("Acme");
-      expect(updated.description).toBe("renamed desc");
-    }).pipe(Effect.provide(OrganizationsMemory({ seed: [orgA] }))),
+  it.effect(
+    "allows an org to keep its own name (self-match is not a conflict)",
+    () =>
+      Effect.gen(function* () {
+        const orgs = yield* Organizations;
+        const updated = yield* orgs.update(orgA.id, {
+          name: "Acme",
+          description: "renamed desc",
+        });
+        expect(updated.name).toBe("Acme");
+        expect(updated.description).toBe("renamed desc");
+      }).pipe(Effect.provide(OrganizationsMemory({ seed: [orgA] }))),
   );
 
   it.effect("allows updates that don't touch the name", () =>
