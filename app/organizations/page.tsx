@@ -8,6 +8,7 @@ import {
   useDeleteOrganization,
   parseOrganizationError,
 } from "@/features/organization/presentation/hooks/use-organizations";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function OrganizationsPage() {
   const { data: organizations = [], isLoading } = useOrganizations();
@@ -15,48 +16,46 @@ export default function OrganizationsPage() {
   const deleteMutation = useDeleteOrganization();
 
   return (
-    <main className="w-full px-4 py-16 sm:px-6 lg:px-8">
-      <div className="space-y-12">
-        <div className="border-b border-gray-200 pb-5 dark:border-white/10">
-          <h1 className="text-base/7 font-semibold text-gray-900 dark:text-white">
+    <main className="mx-auto w-full max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="space-y-10">
+        <header className="space-y-1">
+          <h1 className="text-xl font-semibold tracking-tight">
             Organizations
           </h1>
-          <p className="mt-1 text-sm/6 text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Manage your organizations.
           </p>
-        </div>
+        </header>
 
-        <section>
-          <h2 className="text-sm/6 font-medium text-gray-900 dark:text-white">
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium text-muted-foreground">
             New organization
           </h2>
-          <div className="mt-4">
-            <OrganizationForm
-              onSubmit={(data) => createMutation.mutateAsync(data)}
-              isPending={createMutation.isPending}
-              submitError={parseOrganizationError(createMutation.error)}
-            />
-          </div>
+          <Card>
+            <CardContent>
+              <OrganizationForm
+                onSubmit={(data) => createMutation.mutateAsync(data)}
+                isPending={createMutation.isPending}
+                submitError={parseOrganizationError(createMutation.error)}
+              />
+            </CardContent>
+          </Card>
         </section>
 
-        <section>
-          <h2 className="text-sm/6 font-medium text-gray-900 dark:text-white">
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium text-muted-foreground">
             All organizations
           </h2>
-          <div className="mt-4">
-            {isLoading ? (
-              <div className="py-12 text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Loading...
-                </p>
-              </div>
-            ) : (
-              <OrganizationList
-                organizations={organizations}
-                onDelete={deleteMutation.mutate}
-              />
-            )}
-          </div>
+          {isLoading ? (
+            <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+              Loading…
+            </div>
+          ) : (
+            <OrganizationList
+              organizations={organizations}
+              onDelete={deleteMutation.mutate}
+            />
+          )}
         </section>
       </div>
     </main>

@@ -1,11 +1,10 @@
 "use client";
 
-import { useSession } from "@/lib/auth/auth-client";
+import { useSession } from "@/features/auth/presentation/hooks/use-auth";
 
 /**
- * Current authenticated user from the Better Auth session. Drop-in replacement
- * for the former custom hook: returns `{ data, isLoading }` where `data` is the
- * user (or `null`).
+ * Current authenticated user from the Better Auth session (via React Query).
+ * Returns `{ data, isLoading }` where `data` is the user (or `null`).
  */
 export function useCurrentUser() {
   const { data, isPending } = useSession();

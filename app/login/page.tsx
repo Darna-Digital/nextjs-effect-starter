@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { sendVerificationEmail, signIn } from "@/lib/auth/auth-client";
+import {
+  useResendVerification,
+  useSignIn,
+  type AuthError,
+} from "@/features/auth/presentation/hooks/use-auth";
 import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
 import {
   SignInSchema,
@@ -28,6 +32,8 @@ export default function LoginPage() {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   const [unverified, setUnverified] = useState<string | null>(null);
+  const signIn = useSignIn();
+  const resendMutation = useResendVerification();
 
   const {
     register,
@@ -41,23 +47,23 @@ export default function LoginPage() {
     setFormError(null);
     setUnverified(null);
 
-    const { error } = await signIn.email({ email, password });
-    if (error) {
+    try {
+      await signIn.mutateAsync({ email, password });
+      router.push("/organizations");
+      router.refresh();
+    } catch (e) {
+      const error = e as AuthError;
       if (error.code === "EMAIL_NOT_VERIFIED") {
         setUnverified(email);
         return;
       }
       setFormError(error.message ?? "Invalid email or password.");
-      return;
     }
-
-    router.push("/organizations");
-    router.refresh();
   });
 
   const resend = async () => {
     if (!unverified) return;
-    await sendVerificationEmail({
+    await resendMutation.mutateAsync({
       email: unverified,
       callbackURL: "/verify-email",
     });

@@ -3,7 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { signUp } from "@/lib/auth/auth-client";
+import {
+  useSignUp,
+  type AuthError,
+} from "@/features/auth/presentation/hooks/use-auth";
 import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
 import {
   SignUpSchema,
@@ -25,6 +28,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 export default function RegisterPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const signUp = useSignUp();
 
   const {
     register,
@@ -37,18 +41,17 @@ export default function RegisterPage() {
   const onSubmit = handleSubmit(async ({ name, email, password }) => {
     setFormError(null);
 
-    const { error } = await signUp.email({
-      name,
-      email,
-      password,
-      callbackURL: "/verify-email",
-    });
-    if (error) {
-      setFormError(error.message ?? "Could not create your account.");
-      return;
+    try {
+      await signUp.mutateAsync({
+        name,
+        email,
+        password,
+        callbackURL: "/verify-email",
+      });
+      setSentTo(email);
+    } catch (e) {
+      setFormError((e as AuthError).message ?? "Could not create your account.");
     }
-
-    setSentTo(email);
   });
 
   if (sentTo) {

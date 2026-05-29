@@ -5,6 +5,10 @@ import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
 import { CreateOrganizationSchema } from "@/features/organization/schema/organization.schema.requests";
 import type { CreateOrganizationInput } from "@/lib/api/types";
 import type { OrganizationFieldError } from "../hooks/use-organizations";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type Props = {
   onSubmit: (data: CreateOrganizationInput) => Promise<unknown>;
@@ -37,74 +41,46 @@ export function OrganizationForm({ onSubmit, isPending, submitError }: Props) {
     submitError && submitError.field === null ? submitError.message : undefined;
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       {bannerError && (
-        <div
-          role="alert"
-          className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-400/20"
-        >
-          {bannerError}
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{bannerError}</AlertDescription>
+        </Alert>
       )}
 
-      <div>
-        <label
-          htmlFor="name"
-          className="block text-sm/6 font-medium text-gray-900 dark:text-gray-100"
-        >
-          Name
-        </label>
-        <div className="mt-2">
-          <input
-            id="name"
-            placeholder="Acme Inc."
-            aria-invalid={errors.name || nameServerError ? true : undefined}
-            {...register("name")}
-            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500 sm:text-sm/6"
-          />
-        </div>
-        {errors.name && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-            {errors.name.message}
-          </p>
-        )}
-        {!errors.name && nameServerError && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-            {nameServerError}
+      <div className="space-y-1.5">
+        <Label htmlFor="name">Name</Label>
+        <Input
+          id="name"
+          placeholder="Acme Inc."
+          aria-invalid={errors.name || nameServerError ? true : undefined}
+          {...register("name")}
+        />
+        {(errors.name || nameServerError) && (
+          <p className="text-sm text-destructive">
+            {errors.name?.message ?? nameServerError}
           </p>
         )}
       </div>
 
-      <div>
-        <label
-          htmlFor="description"
-          className="block text-sm/6 font-medium text-gray-900 dark:text-gray-100"
-        >
-          Description
-        </label>
-        <div className="mt-2">
-          <input
-            id="description"
-            placeholder="Optional description"
-            {...register("description")}
-            className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500 sm:text-sm/6"
-          />
-        </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="description">Description</Label>
+        <Input
+          id="description"
+          placeholder="Optional description"
+          {...register("description")}
+        />
         {errors.description && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+          <p className="text-sm text-destructive">
             {errors.description.message}
           </p>
         )}
       </div>
 
       <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
-        >
-          {isPending ? "Creating..." : "Create"}
-        </button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Creating…" : "Create"}
+        </Button>
       </div>
     </form>
   );

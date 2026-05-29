@@ -1,6 +1,9 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import type { Organization } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 type Props = {
   organizations: readonly Organization[];
@@ -10,41 +13,43 @@ type Props = {
 export function OrganizationList({ organizations, onDelete }: Props) {
   if (organizations.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          No organizations yet.
-        </p>
+      <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+        No organizations yet.
       </div>
     );
   }
 
   return (
-    <ul className="divide-y divide-gray-100 dark:divide-white/10">
-      {organizations.map((org) => (
-        <li
-          key={org.id}
-          className="flex items-center justify-between gap-x-6 py-4"
-        >
-          <div className="min-w-0">
-            <p className="text-sm/6 font-semibold text-gray-900 dark:text-white">
-              {org.name}
-            </p>
-            {org.description && (
-              <p className="mt-1 truncate text-xs/5 text-gray-500 dark:text-gray-400">
-                {org.description}
-              </p>
+    <Card className="py-0">
+      <ul className="divide-y divide-border">
+        {organizations.map((org) => (
+          <li
+            key={org.id}
+            className="flex items-center justify-between gap-4 px-4 py-3"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{org.name}</p>
+              {org.description && (
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  {org.description}
+                </p>
+              )}
+            </div>
+            {onDelete && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Delete ${org.name}`}
+                onClick={() => onDelete(org.id)}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 />
+              </Button>
             )}
-          </div>
-          {onDelete && (
-            <button
-              onClick={() => onDelete(org.id)}
-              className="rounded-md px-2 py-1 text-xs font-medium text-red-600 ring-1 ring-inset ring-red-600/20 hover:bg-red-50 dark:text-red-400 dark:ring-red-400/20 dark:hover:bg-red-400/10"
-            >
-              Delete
-            </button>
-          )}
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

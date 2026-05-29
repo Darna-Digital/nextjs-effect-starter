@@ -4,7 +4,10 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { sendVerificationEmail, useSession } from "@/lib/auth/auth-client";
+import {
+  useResendVerification,
+  useSession,
+} from "@/features/auth/presentation/hooks/use-auth";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +22,7 @@ function VerifyEmail() {
   const params = useSearchParams();
   const linkError = params.get("error");
   const { data, isPending } = useSession();
+  const resendMutation = useResendVerification();
 
   if (isPending) return null;
 
@@ -27,7 +31,7 @@ function VerifyEmail() {
 
   const resend = async () => {
     if (!user?.email) return;
-    await sendVerificationEmail({
+    await resendMutation.mutateAsync({
       email: user.email,
       callbackURL: "/verify-email",
     });

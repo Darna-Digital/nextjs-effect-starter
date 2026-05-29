@@ -8,7 +8,7 @@ import {
   MailCheck,
   Workflow,
 } from "lucide-react";
-import { useSession } from "@/lib/auth/auth-client";
+import { useSession } from "@/features/auth/presentation/hooks/use-auth";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,

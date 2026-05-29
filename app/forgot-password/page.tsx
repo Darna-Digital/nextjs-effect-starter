@@ -3,7 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { requestPasswordReset } from "@/lib/auth/auth-client";
+import {
+  useRequestPasswordReset,
+  type AuthError,
+} from "@/features/auth/presentation/hooks/use-auth";
 import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
 import {
   ForgotPasswordSchema,
@@ -25,6 +28,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 export default function ForgotPasswordPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const requestReset = useRequestPasswordReset();
 
   const {
     register,
@@ -37,16 +41,12 @@ export default function ForgotPasswordPage() {
   const onSubmit = handleSubmit(async ({ email }) => {
     setFormError(null);
 
-    const { error } = await requestPasswordReset({
-      email,
-      redirectTo: "/reset-password",
-    });
-    if (error) {
-      setFormError(error.message ?? "Could not send the reset email.");
-      return;
+    try {
+      await requestReset.mutateAsync({ email, redirectTo: "/reset-password" });
+      setSentTo(email);
+    } catch (e) {
+      setFormError((e as AuthError).message ?? "Could not send the reset email.");
     }
-
-    setSentTo(email);
   });
 
   return (

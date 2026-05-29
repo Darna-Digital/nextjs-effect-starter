@@ -17,6 +17,7 @@ import {
 } from "@/features/project/presentation/hooks/use-projects"
 import { useOrganizations } from "@/features/organization/presentation/hooks/use-organizations"
 import { useCurrentUser } from "@/features/auth/presentation/hooks/use-current-user"
+import { Card, CardContent } from "@/components/ui/card"
 
 export default function ProjectsPage() {
   const [filter, setFilter] = useState<ProjectsFilterState>(emptyProjectsFilter)
@@ -35,34 +36,34 @@ export default function ProjectsPage() {
   const heading = filter.onlyMine ? "Your projects" : "All projects"
 
   return (
-    <main className="w-full px-4 py-16 sm:px-6 lg:px-8">
-      <div className="space-y-12">
-        <div className="border-b border-gray-200 pb-5 dark:border-white/10">
-          <h1 className="text-base/7 font-semibold text-gray-900 dark:text-white">
-            Projects
-          </h1>
-          <p className="mt-1 text-sm/6 text-gray-500 dark:text-gray-400">
+    <main className="mx-auto w-full max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="space-y-10">
+        <header className="space-y-1">
+          <h1 className="text-xl font-semibold tracking-tight">Projects</h1>
+          <p className="text-sm text-muted-foreground">
             Manage projects across your organizations.
           </p>
-        </div>
+        </header>
 
-        <section>
-          <h2 className="text-sm/6 font-medium text-gray-900 dark:text-white">
+        <section className="space-y-3">
+          <h2 className="text-sm font-medium text-muted-foreground">
             New project
           </h2>
-          <div className="mt-4">
-            <ProjectForm
-              organizations={organizations}
-              onSubmit={(data) => createMutation.mutateAsync(data)}
-              isPending={createMutation.isPending}
-              submitError={parseProjectError(createMutation.error)}
-            />
-          </div>
+          <Card>
+            <CardContent>
+              <ProjectForm
+                organizations={organizations}
+                onSubmit={(data) => createMutation.mutateAsync(data)}
+                isPending={createMutation.isPending}
+                submitError={parseProjectError(createMutation.error)}
+              />
+            </CardContent>
+          </Card>
         </section>
 
-        <section>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="text-sm/6 font-medium text-gray-900 dark:text-white">
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-medium text-muted-foreground">
               {heading}
             </h2>
             <ProjectsFilterBar
@@ -72,21 +73,17 @@ export default function ProjectsPage() {
               currentUserId={currentUser?.id ?? null}
             />
           </div>
-          <div className="mt-4">
-            {loading ? (
-              <div className="py-12 text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Loading...
-                </p>
-              </div>
-            ) : (
-              <ProjectList
-                projects={projects}
-                organizations={organizations}
-                onDelete={(id) => deleteMutation.mutate(id)}
-              />
-            )}
-          </div>
+          {loading ? (
+            <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+              Loading…
+            </div>
+          ) : (
+            <ProjectList
+              projects={projects}
+              organizations={organizations}
+              onDelete={(id) => deleteMutation.mutate(id)}
+            />
+          )}
         </section>
       </div>
     </main>

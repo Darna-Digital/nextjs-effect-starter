@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { resetPassword } from "@/lib/auth/auth-client";
+import {
+  useResetPassword,
+  type AuthError,
+} from "@/features/auth/presentation/hooks/use-auth";
 import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
 import {
   ResetPasswordSchema,
@@ -30,6 +33,7 @@ function ResetPasswordForm() {
   const token = params.get("token");
   const linkError = params.get("error");
   const [formError, setFormError] = useState<string | null>(null);
+  const resetMutation = useResetPassword();
 
   const {
     register,
@@ -45,14 +49,13 @@ function ResetPasswordForm() {
     if (!token) return;
     setFormError(null);
 
-    const { error } = await resetPassword({ newPassword: password, token });
-    if (error) {
-      setFormError(error.message ?? "Could not reset your password.");
-      return;
+    try {
+      await resetMutation.mutateAsync({ newPassword: password, token });
+      toast.success("Password updated — you can sign in now.");
+      router.push("/login");
+    } catch (e) {
+      setFormError((e as AuthError).message ?? "Could not reset your password.");
     }
-
-    toast.success("Password updated — you can sign in now.");
-    router.push("/login");
   });
 
   return (

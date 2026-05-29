@@ -1,7 +1,10 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import type { Organization, Project } from "@/lib/api/types";
 import { useCurrentUser } from "@/features/auth/presentation/hooks/use-current-user";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 type Props = {
   projects: readonly Project[];
@@ -14,10 +17,8 @@ export function ProjectList({ projects, organizations, onDelete }: Props) {
 
   if (projects.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          No projects yet.
-        </p>
+      <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+        No projects yet.
       </div>
     );
   }
@@ -27,50 +28,53 @@ export function ProjectList({ projects, organizations, onDelete }: Props) {
   }
 
   return (
-    <ul className="divide-y divide-gray-100 dark:divide-white/10">
-      {projects.map((p) => {
-        const mine = currentUser?.id === p.ownerId;
+    <Card className="py-0">
+      <ul className="divide-y divide-border">
+        {projects.map((p) => {
+          const mine = currentUser?.id === p.ownerId;
 
-        return (
-          <li
-            key={p.id}
-            className="flex items-center justify-between gap-x-6 py-4"
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-x-2">
-                <p className="text-sm/6 font-semibold text-gray-900 dark:text-white">
-                  {p.name}
+          return (
+            <li
+              key={p.id}
+              className="flex items-center justify-between gap-4 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-medium">{p.name}</p>
+                  {mine && (
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                      Yours
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  {orgName(p.organizationId)}
                 </p>
 
-                {mine && (
-                  <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[0.625rem] font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-400/20">
-                    Yours
-                  </span>
+                {p.description && (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {p.description}
+                  </p>
                 )}
               </div>
 
-              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                {orgName(p.organizationId)} · owner {p.ownerId}
-              </p>
-
-              {p.description && (
-                <p className="mt-1 truncate text-xs/5 text-gray-500 dark:text-gray-400">
-                  {p.description}
-                </p>
+              {onDelete && mine && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Delete ${p.name}`}
+                  onClick={() => onDelete(p.id)}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 />
+                </Button>
               )}
-            </div>
-
-            {onDelete && mine && (
-              <button
-                onClick={() => onDelete(p.id)}
-                className="rounded-md px-2 py-1 text-xs font-medium text-red-600 ring-1 ring-inset ring-red-600/20 hover:bg-red-50 dark:text-red-400 dark:ring-red-400/20 dark:hover:bg-red-400/10"
-              >
-                Delete
-              </button>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
   );
 }

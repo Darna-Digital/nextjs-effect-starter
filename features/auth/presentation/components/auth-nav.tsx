@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signOut, useSession } from "@/lib/auth/auth-client";
+import {
+  useSession,
+  useSignOut,
+} from "@/features/auth/presentation/hooks/use-auth";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 export function AuthNav() {
   const router = useRouter();
   const { data, isPending } = useSession();
+  const signOut = useSignOut();
 
   if (isPending) return null;
 
@@ -35,13 +39,12 @@ export function AuthNav() {
       <Button
         variant="ghost"
         size="sm"
+        disabled={signOut.isPending}
         onClick={() =>
-          signOut({
-            fetchOptions: {
-              onSuccess: () => {
-                router.push("/login");
-                router.refresh();
-              },
+          signOut.mutate(undefined, {
+            onSuccess: () => {
+              router.push("/login");
+              router.refresh();
             },
           })
         }

@@ -8,13 +8,3 @@ export const authClient = createAuthClient({
       ? process.env.BETTER_AUTH_URL
       : window.location.origin,
 });
-
-export const {
-  signIn,
-  signUp,
-  signOut,
-  useSession,
-  requestPasswordReset,
-  resetPassword,
-  sendVerificationEmail,
-} = authClient;
