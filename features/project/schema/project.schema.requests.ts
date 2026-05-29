@@ -4,26 +4,18 @@ import { ProjectName } from "@/features/project/schema/project.schema.model";
 
 export const CreateProjectSchema = S.Struct({
   name: ProjectName,
-  description: S.optional(S.String),
+  description: S.optionalWith(S.String, { exact: true }),
   organizationId: OrganizationId,
 });
 export type CreateProject = typeof CreateProjectSchema.Type;
 
 export const UpdateProjectSchema = S.Struct({
-  name: S.optional(ProjectName),
-  description: S.optional(S.String),
+  name: S.optionalWith(ProjectName, { exact: true }),
+  description: S.optionalWith(S.String, { exact: true }),
 });
 export type UpdateProject = typeof UpdateProjectSchema.Type;
 
 export const ListProjectsQuerySchema = S.Struct({
-  ownerId: S.optional(S.String),
-  organizationId: S.optional(OrganizationId),
+  ownerId: S.optionalWith(S.String, { exact: true }),
+  organizationId: S.optionalWith(OrganizationId, { exact: true }),
 });
-
-export const ProjectApiErrorSchema = S.Union(
-  S.Struct({ error: S.Literal("Not found"), id: S.String }),
-  S.Struct({ error: S.Literal("Validation failed"), details: S.String }),
-  S.Struct({ error: S.Literal("Too many requests"), retryAfter: S.Number }),
-  S.Struct({ error: S.Literal("Storage error") }),
-);
-export type ProjectApiError = typeof ProjectApiErrorSchema.Type;

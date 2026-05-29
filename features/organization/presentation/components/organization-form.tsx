@@ -2,14 +2,12 @@
 
 import { useForm } from "react-hook-form";
 import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
-import {
-  CreateOrganizationSchema,
-  type CreateOrganization,
-} from "@/features/organization/schema/organization.schema.requests";
+import { CreateOrganizationSchema } from "@/features/organization/schema/organization.schema.requests";
+import type { CreateOrganizationInput } from "@/lib/api/types";
 import type { OrganizationFieldError } from "../hooks/use-organizations";
 
 type Props = {
-  onSubmit: (data: CreateOrganization) => Promise<unknown>;
+  onSubmit: (data: CreateOrganizationInput) => Promise<unknown>;
   isPending?: boolean;
   submitError?: OrganizationFieldError | null;
 };
@@ -20,11 +18,13 @@ export function OrganizationForm({ onSubmit, isPending, submitError }: Props) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<CreateOrganization>({
-    resolver: effectSchemaResolver(CreateOrganizationSchema),
+  } = useForm<CreateOrganizationInput>({
+    resolver: effectSchemaResolver<CreateOrganizationInput>(
+      CreateOrganizationSchema,
+    ),
   });
 
-  const handleFormSubmit = async (data: CreateOrganization) => {
+  const handleFormSubmit = async (data: CreateOrganizationInput) => {
     try {
       await onSubmit(data);
       reset();

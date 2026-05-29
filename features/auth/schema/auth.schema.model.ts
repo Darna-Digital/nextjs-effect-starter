@@ -1,5 +1,5 @@
-import { Data, Schema as S } from "effect";
-
+import { Schema as S } from "effect";
+import { HttpApiSchema } from "@effect/platform";
 
 export const Email = S.Trim.pipe(
   S.lowercased(),
@@ -40,48 +40,32 @@ export const RefreshTokenRecordSchema = S.Struct({
 });
 export type RefreshTokenRecord = typeof RefreshTokenRecordSchema.Type;
 
-export class EmailAlreadyTaken extends Data.TaggedError("EmailAlreadyTaken")<{
-  readonly email: string;
-}> {
-  toResponse(): Response {
-    return Response.json(
-      { error: "Email already taken", email: this.email },
-      { status: 409 },
-    );
-  }
-}
+export class EmailAlreadyTaken extends S.TaggedError<EmailAlreadyTaken>()(
+  "EmailAlreadyTaken",
+  { email: S.String },
+  HttpApiSchema.annotations({ status: 409 }),
+) {}
 
-export class InvalidCredentials extends Data.TaggedError("InvalidCredentials") {
-  toResponse(): Response {
-    return Response.json(
-      { error: "Invalid email or password" },
-      { status: 401 },
-    );
-  }
-}
+export class InvalidCredentials extends S.TaggedError<InvalidCredentials>()(
+  "InvalidCredentials",
+  {},
+  HttpApiSchema.annotations({ status: 401 }),
+) {}
 
-export class NotAuthenticated extends Data.TaggedError("NotAuthenticated") {
-  toResponse(): Response {
-    return Response.json({ error: "Not authenticated" }, { status: 401 });
-  }
-}
+export class NotAuthenticated extends S.TaggedError<NotAuthenticated>()(
+  "NotAuthenticated",
+  {},
+  HttpApiSchema.annotations({ status: 401 }),
+) {}
 
-export class TokenSigningFailed extends Data.TaggedError("TokenSigningFailed")<{
-  readonly cause: unknown;
-}> {
-  toResponse(): Response {
-    console.error("TokenSigningFailed", this.cause);
-    return Response.json({ error: "Token signing failed" }, { status: 500 });
-  }
-}
+export class TokenSigningFailed extends S.TaggedError<TokenSigningFailed>()(
+  "TokenSigningFailed",
+  {},
+  HttpApiSchema.annotations({ status: 500 }),
+) {}
 
-export class RefreshTokenExpired extends Data.TaggedError(
+export class RefreshTokenExpired extends S.TaggedError<RefreshTokenExpired>()(
   "RefreshTokenExpired",
-) {
-  toResponse(): Response {
-    return Response.json(
-      { error: "Refresh token expired or invalid" },
-      { status: 401 },
-    );
-  }
-}
+  {},
+  HttpApiSchema.annotations({ status: 401 }),
+) {}

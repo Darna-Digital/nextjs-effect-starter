@@ -81,7 +81,10 @@ export class Auth extends Effect.Service<Auth>()("Auth", {
             .setIssuedAt()
             .setExpirationTime(expiresIn)
             .sign(secret),
-        catch: (cause) => new TokenSigningFailed({ cause }),
+        catch: (cause) => {
+          console.error("TokenSigningFailed", cause);
+          return new TokenSigningFailed();
+        },
       });
     }
 

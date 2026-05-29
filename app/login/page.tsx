@@ -1,17 +1,16 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { AuthForm } from "@/features/auth/presentation/components/auth-form"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { AuthForm } from "@/features/auth/presentation/components/auth-form";
 import {
   parseAuthError,
   useLogin,
-} from "@/features/auth/presentation/hooks/use-auth"
-import type { Login } from "@/features/auth/schema/auth.schema.requests"
+} from "@/features/auth/presentation/hooks/use-auth";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const mutation = useLogin()
+  const router = useRouter();
+  const mutation = useLogin();
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-16 sm:px-6 lg:px-8">
@@ -37,11 +36,11 @@ export default function LoginPage() {
           isPending={mutation.isPending}
           submitError={parseAuthError(mutation.error)}
           onSubmit={async (data) => {
-            await mutation.mutateAsync(data as Login)
-            router.push("/organizations")
+            await mutation.mutateAsync(data);
+            router.push("/organizations");
           }}
         />
       </div>
     </main>
-  )
+  );
 }

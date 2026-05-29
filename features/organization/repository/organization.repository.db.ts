@@ -4,9 +4,9 @@ import { db } from "@/lib/db/client";
 import { organizations } from "@/lib/db/schema";
 import {
   DB_SPAN_ATTRS,
-  StorageError,
   isFkReferencedError,
   isUniqueViolationError,
+  storageError,
   stripNulls,
   tryDb,
 } from "@/lib/effect/layers/storage";
@@ -42,7 +42,7 @@ export const createDbOrganizationRepository: OrganizationRepo = {
       catch: (cause) =>
         isUniqueViolationError(cause)
           ? new OrganizationNameTaken({ name: org.name })
-          : new StorageError({ cause }),
+          : storageError(cause),
     })
       .pipe(
         Effect.withSpan("mysql.organizations.insert", {
@@ -62,7 +62,7 @@ export const createDbOrganizationRepository: OrganizationRepo = {
         catch: (cause) =>
           isUniqueViolationError(cause) && typeof patch.name === "string"
             ? new OrganizationNameTaken({ name: patch.name })
-            : new StorageError({ cause }),
+            : storageError(cause),
       }).pipe(
         Effect.withSpan("mysql.organizations.update", {
           attributes: DB_SPAN_ATTRS,
@@ -83,7 +83,7 @@ export const createDbOrganizationRepository: OrganizationRepo = {
         catch: (cause) =>
           isFkReferencedError(cause)
             ? new OrganizationInUse({ id })
-            : new StorageError({ cause }),
+            : storageError(cause),
       }).pipe(
         Effect.withSpan("mysql.organizations.delete", {
           attributes: DB_SPAN_ATTRS,

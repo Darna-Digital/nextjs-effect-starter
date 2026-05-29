@@ -1,24 +1,20 @@
 import {
   Clock,
   Context,
-  Data,
   Effect,
   HashMap,
   Layer,
   Option,
   Ref,
+  Schema as S,
 } from "effect";
+import { HttpApiSchema } from "@effect/platform";
 
-export class TooManyRequests extends Data.TaggedError("TooManyRequests")<{
-  readonly retryAfter: number;
-}> {
-  toResponse(): Response {
-    return Response.json(
-      { error: "Too many requests", retryAfter: this.retryAfter },
-      { status: 429, headers: { "Retry-After": String(this.retryAfter) } },
-    );
-  }
-}
+export class TooManyRequests extends S.TaggedError<TooManyRequests>()(
+  "TooManyRequests",
+  { retryAfter: S.Number },
+  HttpApiSchema.annotations({ status: 429 }),
+) {}
 
 export type RateLimitConfig = {
   readonly key: string;

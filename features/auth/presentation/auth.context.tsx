@@ -7,14 +7,8 @@ import {
   useEffect,
   useState,
 } from "react";
-import { Schema as S } from "effect";
-import {
-  PublicUserSchema,
-  type PublicUser,
-} from "@/features/auth/schema/auth.schema.model";
-import { apiClient, registerUnauthenticatedHandler } from "./api-client";
-
-const meSchema = S.standardSchemaV1(S.Struct({ user: PublicUserSchema }));
+import { type PublicUser } from "@/features/auth/schema/auth.schema.model";
+import { fetchClient, registerUnauthenticatedHandler } from "@/lib/api/client";
 
 type AuthContextValue = {
   user: PublicUser | null;
@@ -38,11 +32,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    apiClient
-      .url("/api/auth/me")
-      .schema(meSchema)
-      .run("GET")
-      .then((data) => {
+    fetchClient
+      .GET("/api/auth/me")
+      .then(({ data }) => {
         if (cancelled) return;
         if (data?.user) setUserState(data.user);
       })

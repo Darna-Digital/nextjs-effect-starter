@@ -1,54 +1,54 @@
-"use client"
+"use client";
 
-import { useForm } from "react-hook-form"
-import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver"
-import { LoginSchema, RegisterSchema } from "@/features/auth/schema/auth.schema.requests"
-import type { Login, Register } from "@/features/auth/schema/auth.schema.requests"
-import type { AuthFieldError } from "../hooks/use-auth"
+import { useForm } from "react-hook-form";
+import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
+import {
+  LoginSchema,
+  RegisterSchema,
+} from "@/features/auth/schema/auth.schema.requests";
+import type { LoginInput, RegisterInput } from "@/lib/api/types";
+import type { AuthFieldError } from "../hooks/use-auth";
 
-type Mode = "login" | "register"
+type Mode = "login" | "register";
+
+export type AuthInput = RegisterInput | LoginInput;
 
 type Props = {
-  mode: Mode
-  onSubmit: (data: Register | Login) => Promise<unknown>
-  isPending?: boolean
-  submitError?: AuthFieldError | null
-}
+  mode: Mode;
+  onSubmit: (data: AuthInput) => Promise<unknown>;
+  isPending?: boolean;
+  submitError?: AuthFieldError | null;
+};
 
 const inputClass =
-  "block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500 sm:text-sm/6"
+  "block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:focus:outline-indigo-500 sm:text-sm/6";
 
-export function AuthForm({
-  mode,
-  onSubmit,
-  isPending,
-  submitError,
-}: Props) {
-  const schema = mode === "register" ? RegisterSchema : LoginSchema
+export function AuthForm({ mode, onSubmit, isPending, submitError }: Props) {
+  const schema = mode === "register" ? RegisterSchema : LoginSchema;
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<Register | Login>({
-    resolver: effectSchemaResolver(schema),
-  })
+  } = useForm<AuthInput>({
+    resolver: effectSchemaResolver<AuthInput>(schema),
+  });
 
-  const submit = async (data: Register | Login) => {
+  const submit = async (data: AuthInput) => {
     try {
-      await onSubmit(data)
-      reset()
+      await onSubmit(data);
+      reset();
     } catch {
       // Keep user's input; parent renders `submitError` inline.
     }
-  }
+  };
 
   const emailServerError =
-    submitError?.field === "email" ? submitError.message : undefined
+    submitError?.field === "email" ? submitError.message : undefined;
   const passwordServerError =
-    submitError?.field === "password" ? submitError.message : undefined
+    submitError?.field === "password" ? submitError.message : undefined;
   const bannerError =
-    submitError && submitError.field === null ? submitError.message : undefined
+    submitError && submitError.field === null ? submitError.message : undefined;
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-5">
@@ -102,7 +102,9 @@ export function AuthForm({
           <input
             id="password"
             type="password"
-            autoComplete={mode === "register" ? "new-password" : "current-password"}
+            autoComplete={
+              mode === "register" ? "new-password" : "current-password"
+            }
             placeholder="••••••••"
             aria-invalid={
               errors.password || passwordServerError ? true : undefined
@@ -139,5 +141,5 @@ export function AuthForm({
         </button>
       </div>
     </form>
-  )
+  );
 }

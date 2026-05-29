@@ -1,12 +1,16 @@
-import { Data, Effect } from "effect";
+import { Effect, Schema as S } from "effect";
+import { HttpApiSchema } from "@effect/platform";
 
-export class StorageError extends Data.TaggedError("StorageError")<{
-  readonly cause: unknown;
-}> {
-  toResponse(): Response {
-    console.error("StorageError", this.cause);
-    return Response.json({ error: "Storage error" }, { status: 500 });
-  }
+export class StorageError extends S.TaggedError<StorageError>()(
+  "StorageError",
+  {},
+  HttpApiSchema.annotations({ status: 500 }),
+) {}
+
+/** Logs the underlying cause and produces a wire-safe StorageError. */
+export function storageError(cause: unknown): StorageError {
+  console.error("StorageError", cause);
+  return new StorageError();
 }
 
 export type Patch<Row> = {
@@ -18,7 +22,7 @@ export const DB_SPAN_ATTRS = { "db.system": "mysql" } as const;
 export function tryDb<Result>(name: string, run: () => Promise<Result>) {
   return Effect.tryPromise({
     try: run,
-    catch: (cause) => new StorageError({ cause }),
+    catch: storageError,
   }).pipe(Effect.withSpan(name, { attributes: DB_SPAN_ATTRS }));
 }
 

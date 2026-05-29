@@ -2,16 +2,13 @@
 
 import { useForm } from "react-hook-form";
 import { effectSchemaResolver } from "@/lib/effect/form/effect-schema-resolver";
-import {
-  CreateProjectSchema,
-  type CreateProject,
-} from "@/features/project/schema/project.schema.requests";
-import type { Organization } from "@/features/organization/schema/organization.schema.model";
+import { CreateProjectSchema } from "@/features/project/schema/project.schema.requests";
+import type { CreateProjectInput, Organization } from "@/lib/api/types";
 import type { ProjectFormError } from "../hooks/use-projects";
 
 type Props = {
   organizations: readonly Organization[];
-  onSubmit: (data: CreateProject) => Promise<unknown>;
+  onSubmit: (data: CreateProjectInput) => Promise<unknown>;
   isPending?: boolean;
   submitError?: ProjectFormError | null;
 };
@@ -27,14 +24,14 @@ export function ProjectForm({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<CreateProject>({
-    resolver: effectSchemaResolver(CreateProjectSchema),
+  } = useForm<CreateProjectInput>({
+    resolver: effectSchemaResolver<CreateProjectInput>(CreateProjectSchema),
     defaultValues: {
       organizationId: organizations[0]?.id,
     },
   });
 
-  const handleFormSubmit = async (data: CreateProject) => {
+  const handleFormSubmit = async (data: CreateProjectInput) => {
     try {
       await onSubmit(data);
       reset({ organizationId: organizations[0]?.id });

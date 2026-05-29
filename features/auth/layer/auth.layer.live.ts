@@ -7,7 +7,6 @@ import {
   createRefreshTokenRepository,
   createDbUserRepository,
 } from "@/features/auth/repository/auth.repository.db";
-import { RequestUserResolverLive } from "@/features/auth/auth.http";
 import {
   Auth,
   JwtExpiresIn,
@@ -47,9 +46,4 @@ export const AuthLive = Auth.Default.pipe(
       ),
     ),
   ),
-);
-
-export const AuthStackLive = Layer.mergeAll(
-  AuthLive,
-  RequestUserResolverLive.pipe(Layer.provide(AuthLive)),
 );

@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import { refreshTokens, users } from "@/lib/db/schema";
 import {
   DB_SPAN_ATTRS,
-  StorageError,
+  storageError,
   tryDb,
 } from "@/lib/effect/layers/storage";
 import {
@@ -69,9 +69,7 @@ export const createRefreshTokenRepository: RefreshTokenRepo = {
           await tx.insert(refreshTokens).values(newRecord);
         }),
       catch: (cause) =>
-        cause instanceof RefreshTokenExpired
-          ? cause
-          : new StorageError({ cause }),
+        cause instanceof RefreshTokenExpired ? cause : storageError(cause),
     })
       .pipe(
         Effect.withSpan("mysql.refresh_tokens.rotate", {

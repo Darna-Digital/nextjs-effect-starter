@@ -1,30 +1,9 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Match, Schema as S } from "effect";
-import {
-  getFetchError,
-  type FetcherThrownError,
-} from "@darna-digital/composable-fetcher";
-import {
-  AuthApiErrorSchema,
-  AuthSessionSchema,
-  LoginSchema,
-  RegisterSchema,
-  type AuthApiError,
-  type AuthSession,
-  type Login,
-  type Register,
-} from "@/features/auth/schema/auth.schema.requests";
-import { apiClient } from "../api-client";
+import { useQueryClient } from "@tanstack/react-query";
+import { $api } from "@/lib/api/client";
+import type { LoginInput, RegisterInput } from "@/lib/api/types";
 import { useAuthContext } from "../auth.context";
-
-const sessionSchema = S.standardSchemaV1(AuthSessionSchema);
-const registerSchema = S.standardSchemaV1(RegisterSchema);
-const loginSchema = S.standardSchemaV1(LoginSchema);
-const authErrorSchema = S.standardSchemaV1(AuthApiErrorSchema);
-
-type AuthThrownError = FetcherThrownError<AuthApiError>;
 
 /** Current user from context — no HTTP call. */
 export function useCurrentUser() {
@@ -34,49 +13,44 @@ export function useCurrentUser() {
 
 export function useRegister() {
   const { setUser } = useAuthContext();
-  return useMutation<AuthSession, AuthThrownError, Register>({
-    mutationFn: (input) =>
-      apiClient
-        .url("/api/auth/register")
-        .input(registerSchema)
-        .schema(sessionSchema)
-        .errorSchema(authErrorSchema)
-        .body(input)
-        .run("POST") as Promise<AuthSession>,
-    onSuccess: ({ user }) => setUser(user),
+  const mutation = $api.useMutation("post", "/api/auth/register", {
+    onSuccess: (data) => setUser(data.user),
   });
+  return {
+    ...mutation,
+    mutate: (body: RegisterInput) => mutation.mutate({ body }),
+    mutateAsync: (body: RegisterInput) => mutation.mutateAsync({ body }),
+  };
 }
 
 export function useLogin() {
   const { setUser } = useAuthContext();
-  return useMutation<AuthSession, AuthThrownError, Login>({
-    mutationFn: (input) =>
-      apiClient
-        .url("/api/auth/login")
-        .input(loginSchema)
-        .schema(sessionSchema)
-        .errorSchema(authErrorSchema)
-        .body(input)
-        .run("POST") as Promise<AuthSession>,
-    onSuccess: ({ user }) => setUser(user),
+  const mutation = $api.useMutation("post", "/api/auth/login", {
+    onSuccess: (data) => setUser(data.user),
   });
+  return {
+    ...mutation,
+    mutate: (body: LoginInput) => mutation.mutate({ body }),
+    mutateAsync: (body: LoginInput) => mutation.mutateAsync({ body }),
+  };
 }
 
 export function useLogout() {
   const { clearUser } = useAuthContext();
   const qc = useQueryClient();
-  return useMutation<void, AuthThrownError, void>({
-    mutationFn: () =>
-      apiClient
-        .url("/api/auth/logout")
-        .errorSchema(authErrorSchema)
-        .run("POST") as Promise<void>,
+  const mutation = $api.useMutation("post", "/api/auth/logout", {
     onSuccess: () => {
       clearUser();
       qc.clear();
     },
-    onError: clearUser,
+    onError: () => clearUser(),
   });
+  type MutateOptions = Parameters<typeof mutation.mutate>[1];
+  return {
+    ...mutation,
+    mutate: (_?: void, options?: MutateOptions) => mutation.mutate({}, options),
+    mutateAsync: () => mutation.mutateAsync({}),
+  };
 }
 
 export type AuthFieldError = {
@@ -84,48 +58,52 @@ export type AuthFieldError = {
   message: string;
 };
 
-const matchApiError = Match.type<AuthApiError>().pipe(
-  Match.discriminator("error")("Email already taken", (e) => ({
-    field: "email" as const,
-    message: `${e.email} is already registered.`,
-  })),
-  Match.discriminator("error")("Invalid email or password", () => ({
-    field: "password" as const,
-    message: "Invalid email or password.",
-  })),
-  Match.discriminator("error")("Not authenticated", () => ({
-    field: null,
-    message: "You're signed out. Please log in again.",
-  })),
-  Match.discriminator("error")("Refresh token expired or invalid", () => ({
-    field: null,
-    message: "Session expired. Please sign in again.",
-  })),
-  Match.discriminator("error")("Validation failed", () => ({
-    field: "email" as const,
-    message: "Please check the form fields.",
-  })),
-  Match.discriminator("error")("Too many requests", (e) => ({
-    field: null,
-    message: `Too many attempts — try again in ${e.retryAfter}s.`,
-  })),
-  Match.discriminator("error")("Token signing failed", () => ({
-    field: null,
-    message: "Session could not be created. Please try again.",
-  })),
-  Match.discriminator("error")("Storage error", () => ({
-    field: null,
-    message: "Something went wrong on our side. Please try again.",
-  })),
-  Match.exhaustive,
-);
+const tagOf = (error: unknown): string | undefined =>
+  typeof error === "object" && error !== null && "_tag" in error
+    ? String((error as { _tag: unknown })._tag)
+    : undefined;
 
 export function parseAuthError(error: unknown): AuthFieldError | null {
   if (!error) return null;
-  const fe = getFetchError<AuthApiError>(error);
-  if (!fe) return { field: null, message: String(error) };
-  if (fe.type === "http" && fe.data) return matchApiError(fe.data);
-  if (fe.type === "network")
-    return { field: null, message: "Network error. Check your connection." };
-  return { field: null, message: fe.message };
+  switch (tagOf(error)) {
+    case "EmailAlreadyTaken":
+      return {
+        field: "email",
+        message: `${(error as { email: string }).email} is already registered.`,
+      };
+    case "InvalidCredentials":
+      return { field: "password", message: "Invalid email or password." };
+    case "NotAuthenticated":
+      return {
+        field: null,
+        message: "You're signed out. Please log in again.",
+      };
+    case "RefreshTokenExpired":
+      return { field: null, message: "Session expired. Please sign in again." };
+    case "HttpApiDecodeError":
+      return { field: "email", message: "Please check the form fields." };
+    case "TooManyRequests":
+      return {
+        field: null,
+        message: `Too many attempts — try again in ${(error as { retryAfter: number }).retryAfter}s.`,
+      };
+    case "TokenSigningFailed":
+      return {
+        field: null,
+        message: "Session could not be created. Please try again.",
+      };
+    case "StorageError":
+      return {
+        field: null,
+        message: "Something went wrong on our side. Please try again.",
+      };
+    default:
+      return {
+        field: null,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Network error. Check your connection.",
+      };
+  }
 }

@@ -1,9 +1,6 @@
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { cookies } from "next/headers";
-import { RequestUserResolver } from "@/lib/effect/http/request-user";
-import { CurrentUser, type User } from "@/lib/effect/layers/auth";
 import {
-  NotAuthenticated,
   RefreshTokenExpired,
   type PublicUser,
 } from "@/features/auth/schema/auth.schema.model";
@@ -51,47 +48,6 @@ function getRefreshCookie() {
     return jar.get(REFRESH_COOKIE)?.value ?? null;
   });
 }
-
-const ANONYMOUS_USER: User = {
-  id: "anonymous",
-  email: "anonymous@demo.local",
-};
-
-export const RequestUserResolverLive = Layer.effect(
-  RequestUserResolver,
-  Effect.gen(function* () {
-    const auth = yield* Auth;
-    return {
-      resolve: (request: Request): Effect.Effect<User> =>
-        Effect.gen(function* () {
-          const token = parseCookie(
-            request.headers.get("cookie"),
-            ACCESS_COOKIE,
-          );
-          if (!token) return ANONYMOUS_USER;
-          return yield* auth
-            .verifyToken(token)
-            .pipe(Effect.catchAll(() => Effect.succeed(ANONYMOUS_USER)));
-        }),
-    };
-  }),
-);
-
-function parseCookie(header: string | null, name: string): string | undefined {
-  if (!header) return undefined;
-  for (const part of header.split(";")) {
-    const [k, ...v] = part.trim().split("=");
-    if (k === name) return decodeURIComponent(v.join("="));
-  }
-  return undefined;
-}
-
-export const applyAuthMiddleware = Effect.gen(function* () {
-  const user = yield* CurrentUser;
-  if (user.id === ANONYMOUS_USER.id)
-    return yield* Effect.fail(new NotAuthenticated());
-  return user;
-});
 
 type Session = {
   user: PublicUser;

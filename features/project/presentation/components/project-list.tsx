@@ -1,16 +1,12 @@
 "use client";
 
-import type {
-  Project,
-  ProjectId,
-} from "@/features/project/schema/project.schema.model";
-import type { Organization } from "@/features/organization/schema/organization.schema.model";
+import type { Organization, Project } from "@/lib/api/types";
 import { useCurrentUser } from "@/features/auth/presentation/hooks/use-auth";
 
 type Props = {
   projects: readonly Project[];
   organizations: readonly Organization[];
-  onDelete?: (id: ProjectId) => void;
+  onDelete?: (id: Project["id"]) => void;
 };
 
 export function ProjectList({ projects, organizations, onDelete }: Props) {

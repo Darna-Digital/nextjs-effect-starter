@@ -1,17 +1,16 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { AuthForm } from "@/features/auth/presentation/components/auth-form"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { AuthForm } from "@/features/auth/presentation/components/auth-form";
 import {
   parseAuthError,
   useRegister,
-} from "@/features/auth/presentation/hooks/use-auth"
-import type { Register } from "@/features/auth/schema/auth.schema.requests"
+} from "@/features/auth/presentation/hooks/use-auth";
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const mutation = useRegister()
+  const router = useRouter();
+  const mutation = useRegister();
 
   return (
     <main className="mx-auto w-full max-w-md px-4 py-16 sm:px-6 lg:px-8">
@@ -37,11 +36,11 @@ export default function RegisterPage() {
           isPending={mutation.isPending}
           submitError={parseAuthError(mutation.error)}
           onSubmit={async (data) => {
-            await mutation.mutateAsync(data as Register)
-            router.push("/organizations")
+            await mutation.mutateAsync(data);
+            router.push("/organizations");
           }}
         />
       </div>
     </main>
-  )
+  );
 }

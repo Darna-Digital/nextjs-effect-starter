@@ -1,19 +1,13 @@
-"use client"
+"use client";
 
-import type {
-  Organization,
-  OrganizationId,
-} from "@/features/organization/schema/organization.schema.model"
+import type { Organization } from "@/lib/api/types";
 
 type Props = {
-  organizations: readonly Organization[]
-  onDelete?: (id: OrganizationId) => void
-}
+  organizations: readonly Organization[];
+  onDelete?: (id: Organization["id"]) => void;
+};
 
-export function OrganizationList({
-  organizations,
-  onDelete,
-}: Props) {
+export function OrganizationList({ organizations, onDelete }: Props) {
   if (organizations.length === 0) {
     return (
       <div className="py-12 text-center">
@@ -21,13 +15,16 @@ export function OrganizationList({
           No organizations yet.
         </p>
       </div>
-    )
+    );
   }
 
   return (
     <ul className="divide-y divide-gray-100 dark:divide-white/10">
       {organizations.map((org) => (
-        <li key={org.id} className="flex items-center justify-between gap-x-6 py-4">
+        <li
+          key={org.id}
+          className="flex items-center justify-between gap-x-6 py-4"
+        >
           <div className="min-w-0">
             <p className="text-sm/6 font-semibold text-gray-900 dark:text-white">
               {org.name}
@@ -49,5 +46,5 @@ export function OrganizationList({
         </li>
       ))}
     </ul>
-  )
+  );
 }

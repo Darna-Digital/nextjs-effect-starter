@@ -1,4 +1,5 @@
-import { Data, Schema as S } from "effect";
+import { Schema as S } from "effect";
+import { HttpApiSchema } from "@effect/platform";
 
 export const OrganizationId = S.String.pipe(S.brand("OrganizationId"));
 export type OrganizationId = typeof OrganizationId.Type;
@@ -12,52 +13,26 @@ export const OrganizationSchema = S.Struct({
 });
 export type Organization = typeof OrganizationSchema.Type;
 
-export class OrganizationNotFound extends Data.TaggedError(
+export class OrganizationNotFound extends S.TaggedError<OrganizationNotFound>()(
   "OrganizationNotFound",
-)<{
-  readonly id: OrganizationId;
-}> {
-  toResponse(): Response {
-    return Response.json({ error: "Not found", id: this.id }, { status: 404 });
-  }
-}
+  { id: OrganizationId },
+  HttpApiSchema.annotations({ status: 404 }),
+) {}
 
-export class OrganizationNameTaken extends Data.TaggedError(
+export class OrganizationNameTaken extends S.TaggedError<OrganizationNameTaken>()(
   "OrganizationNameTaken",
-)<{
-  readonly name: string;
-}> {
-  toResponse(): Response {
-    return Response.json(
-      { error: "Name already taken", name: this.name },
-      { status: 409 },
-    );
-  }
-}
+  { name: S.String },
+  HttpApiSchema.annotations({ status: 409 }),
+) {}
 
-export class OrganizationNameReserved extends Data.TaggedError(
+export class OrganizationNameReserved extends S.TaggedError<OrganizationNameReserved>()(
   "OrganizationNameReserved",
-)<{
-  readonly name: string;
-}> {
-  toResponse(): Response {
-    return Response.json(
-      { error: "Name is reserved", name: this.name },
-      { status: 409 },
-    );
-  }
-}
+  { name: S.String },
+  HttpApiSchema.annotations({ status: 409 }),
+) {}
 
-export class OrganizationInUse extends Data.TaggedError("OrganizationInUse")<{
-  readonly id: OrganizationId;
-}> {
-  toResponse(): Response {
-    return Response.json(
-      {
-        error: "Organization has dependent projects",
-        id: this.id,
-      },
-      { status: 409 },
-    );
-  }
-}
+export class OrganizationInUse extends S.TaggedError<OrganizationInUse>()(
+  "OrganizationInUse",
+  { id: OrganizationId },
+  HttpApiSchema.annotations({ status: 409 }),
+) {}

@@ -1,6 +1,6 @@
 "use client";
 
-import type { Organization } from "@/features/organization/schema/organization.schema.model";
+import type { Organization } from "@/lib/api/types";
 
 export type ProjectsFilterState = {
   onlyMine: boolean;

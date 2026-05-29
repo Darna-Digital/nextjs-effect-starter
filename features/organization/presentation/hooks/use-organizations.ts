@@ -1,111 +1,77 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Match, Schema as S } from "effect";
-import {
-  getFetchError,
-  type FetcherThrownError,
-} from "@darna-digital/composable-fetcher";
-import { apiClient } from "@/features/auth/presentation/api-client";
-import {
-  OrganizationSchema,
-  type OrganizationId,
-} from "@/features/organization/schema/organization.schema.model";
-import {
-  CreateOrganizationSchema,
-  UpdateOrganizationSchema,
-  OrganizationApiErrorSchema,
-  type OrganizationApiError,
-  type CreateOrganization,
-  type UpdateOrganization,
-} from "@/features/organization/schema/organization.schema.requests";
+import { useQueryClient } from "@tanstack/react-query";
+import { $api } from "@/lib/api/client";
+import type {
+  CreateOrganizationInput,
+  Organization,
+  UpdateOrganizationInput,
+} from "@/lib/api/types";
 
-const QUERY_KEY = ["organizations"] as const;
-
-const organizationListSchema = S.standardSchemaV1(S.Array(OrganizationSchema));
-const organizationSchema = S.standardSchemaV1(OrganizationSchema);
-const createOrganizationSchema = S.standardSchemaV1(CreateOrganizationSchema);
-const updateOrganizationSchema = S.standardSchemaV1(UpdateOrganizationSchema);
-const organizationApiErrorSchema = S.standardSchemaV1(
-  OrganizationApiErrorSchema,
-);
-
-type OrganizationThrownError = FetcherThrownError<OrganizationApiError>;
+const LIST_KEY = ["get", "/api/organizations"] as const;
 
 export function useOrganizations() {
-  return useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: () =>
-      apiClient
-        .url("/api/organizations")
-        .schema(organizationListSchema)
-        .run("GET"),
-  });
+  return $api.useQuery("get", "/api/organizations");
 }
 
-export function useOrganization(id: OrganizationId) {
-  return useQuery({
-    queryKey: [...QUERY_KEY, id],
-    queryFn: () =>
-      apiClient
-        .url(`/api/organizations/${id}`)
-        .schema(organizationSchema)
-        .errorSchema(organizationApiErrorSchema)
-        .run("GET"),
+export function useOrganization(id: Organization["id"]) {
+  return $api.useQuery("get", "/api/organizations/{id}", {
+    params: { path: { id } },
   });
 }
 
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
-
-  return useMutation<unknown, OrganizationThrownError, CreateOrganization>({
-    mutationFn: (input) =>
-      apiClient
-        .url("/api/organizations")
-        .input(createOrganizationSchema)
-        .schema(organizationSchema)
-        .errorSchema(organizationApiErrorSchema)
-        .body(input)
-        .run("POST"),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  const mutation = $api.useMutation("post", "/api/organizations", {
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
   });
+  return {
+    ...mutation,
+    mutate: (body: CreateOrganizationInput) => mutation.mutate({ body }),
+    mutateAsync: (body: CreateOrganizationInput) =>
+      mutation.mutateAsync({ body }),
+  };
 }
 
 export function useUpdateOrganization() {
   const queryClient = useQueryClient();
-
-  return useMutation<
-    unknown,
-    OrganizationThrownError,
-    { id: OrganizationId; input: UpdateOrganization }
-  >({
-    mutationFn: ({ id, input }) =>
-      apiClient
-        .url(`/api/organizations/${id}`)
-        .input(updateOrganizationSchema)
-        .schema(organizationSchema)
-        .errorSchema(organizationApiErrorSchema)
-        .body(input)
-        .run("PUT"),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  const mutation = $api.useMutation("put", "/api/organizations/{id}", {
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
   });
+  return {
+    ...mutation,
+    mutate: (vars: {
+      id: Organization["id"];
+      input: UpdateOrganizationInput;
+    }) =>
+      mutation.mutate({ params: { path: { id: vars.id } }, body: vars.input }),
+    mutateAsync: (vars: {
+      id: Organization["id"];
+      input: UpdateOrganizationInput;
+    }) =>
+      mutation.mutateAsync({
+        params: { path: { id: vars.id } },
+        body: vars.input,
+      }),
+  };
 }
 
 export function useDeleteOrganization() {
   const queryClient = useQueryClient();
-
-  return useMutation<void, OrganizationThrownError, OrganizationId>({
-    mutationFn: (id) =>
-      apiClient
-        .url(`/api/organizations/${id}`)
-        .errorSchema(organizationApiErrorSchema)
-        .run("DELETE"),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  const mutation = $api.useMutation("delete", "/api/organizations/{id}", {
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEY }),
     onError: (error) => toastError(error),
   });
+  return {
+    ...mutation,
+    mutate: (id: Organization["id"]) =>
+      mutation.mutate({ params: { path: { id } } }),
+    mutateAsync: (id: Organization["id"]) =>
+      mutation.mutateAsync({ params: { path: { id } } }),
+  };
 }
 
-function toastError(error: OrganizationThrownError) {
+function toastError(error: unknown) {
   const parsed = parseOrganizationError(error);
   if (parsed) window.alert(parsed.message);
 }
@@ -115,52 +81,53 @@ export type OrganizationFieldError = {
   message: string;
 };
 
-const matchApiError = Match.type<OrganizationApiError>().pipe(
-  Match.discriminator("error")("Name already taken", (e) => ({
-    field: "name" as const,
-    message: `"${e.name}" is already taken.`,
-  })),
-  Match.discriminator("error")("Name is reserved", (e) => ({
-    field: "name" as const,
-    message: `"${e.name}" is a reserved name.`,
-  })),
-  Match.discriminator("error")("Validation failed", () => ({
-    field: "name" as const,
-    message: "Please check the form fields.",
-  })),
-  Match.discriminator("error")("Not found", () => ({
-    field: null,
-    message: "Organization not found.",
-  })),
-  Match.discriminator("error")("Organization has dependent projects", () => ({
-    field: null,
-    message:
-      "Can't delete: this organization still has projects. Delete those first, then try again.",
-  })),
-  Match.discriminator("error")("Too many requests", (e) => ({
-    field: null,
-    message: `Too many requests — try again in ${e.retryAfter}s.`,
-  })),
-  Match.discriminator("error")("Storage error", () => ({
-    field: null,
-    message: "Something went wrong on our side. Please try again.",
-  })),
-  Match.exhaustive,
-);
+const tagOf = (error: unknown): string | undefined =>
+  typeof error === "object" && error !== null && "_tag" in error
+    ? String((error as { _tag: unknown })._tag)
+    : undefined;
 
 export function parseOrganizationError(
   error: unknown,
 ): OrganizationFieldError | null {
   if (!error) return null;
-
-  const fe = getFetchError<OrganizationApiError>(error);
-  if (!fe) return { field: null, message: String(error) };
-
-  if (fe.type === "http" && fe.data) return matchApiError(fe.data);
-
-  if (fe.type === "network") {
-    return { field: null, message: "Network error. Check your connection." };
+  switch (tagOf(error)) {
+    case "OrganizationNameTaken":
+      return {
+        field: "name",
+        message: `"${(error as { name: string }).name}" is already taken.`,
+      };
+    case "OrganizationNameReserved":
+      return {
+        field: "name",
+        message: `"${(error as { name: string }).name}" is a reserved name.`,
+      };
+    case "HttpApiDecodeError":
+      return { field: "name", message: "Please check the form fields." };
+    case "OrganizationNotFound":
+      return { field: null, message: "Organization not found." };
+    case "OrganizationInUse":
+      return {
+        field: null,
+        message:
+          "Can't delete: this organization still has projects. Delete those first, then try again.",
+      };
+    case "TooManyRequests":
+      return {
+        field: null,
+        message: `Too many requests — try again in ${(error as { retryAfter: number }).retryAfter}s.`,
+      };
+    case "StorageError":
+      return {
+        field: null,
+        message: "Something went wrong on our side. Please try again.",
+      };
+    default:
+      return {
+        field: null,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Network error. Check your connection.",
+      };
   }
-
-  return { field: null, message: fe.message };
 }
