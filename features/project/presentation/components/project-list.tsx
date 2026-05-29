@@ -1,7 +1,7 @@
 "use client";
 
 import type { Organization, Project } from "@/lib/api/types";
-import { useCurrentUser } from "@/features/auth/presentation/hooks/use-auth";
+import { useCurrentUser } from "@/features/auth/presentation/hooks/use-current-user";
 
 type Props = {
   projects: readonly Project[];

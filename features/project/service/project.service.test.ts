@@ -14,8 +14,18 @@ import type {
   OrganizationId,
 } from "@/features/organization/schema/organization.schema.model";
 
-const alice: User = { id: "user-alice", email: "alice@example.com" };
-const bob: User = { id: "user-bob", email: "bob@example.com" };
+const mkUser = (id: string, email: string): User => ({
+  id,
+  email,
+  name: email.split("@")[0],
+  emailVerified: true,
+  image: null,
+  createdAt: new Date(0),
+  updatedAt: new Date(0),
+});
+
+const alice: User = mkUser("user-alice", "alice@example.com");
+const bob: User = mkUser("user-bob", "bob@example.com");
 
 const orgA: Organization = {
   id: "org-a" as OrganizationId,

@@ -1,17 +1,28 @@
-import { HttpApiMiddleware, HttpApiSecurity } from "@effect/platform";
+import {
+  HttpApiMiddleware,
+  HttpApiSchema,
+  HttpApiSecurity,
+} from "@effect/platform";
+import { Schema as S } from "effect";
 import { CurrentUser } from "@/lib/effect/layers/auth";
-import { NotAuthenticated } from "@/features/auth/schema/auth.schema.model";
+
+/** Raised (401) when a request has no valid Better Auth session. */
+export class NotAuthenticated extends S.TaggedError<NotAuthenticated>()(
+  "NotAuthenticated",
+  {},
+  HttpApiSchema.annotations({ status: 401 }),
+) {}
 
 /**
- * HttpApi middleware tag that authenticates a request from the `access_token`
- * cookie and provides the verified user as {@link CurrentUser}. Endpoints opt
- * in via `.middleware(Authentication)`; a missing or invalid token fails the
- * request with {@link NotAuthenticated} (401) before the handler runs.
+ * HttpApi middleware tag that authenticates a request from the Better Auth
+ * session cookie and provides the resolved user as {@link CurrentUser}.
+ * Endpoints opt in via `.middleware(Authentication)`; a missing or invalid
+ * session fails the request with {@link NotAuthenticated} (401).
  *
- * This module is client-safe (no service implementation) so the API group
- * definitions — and the derived client — can reference the tag without pulling
- * server-only code into the browser bundle. The implementation lives in
- * `auth.middleware.live.ts`.
+ * This module is client-safe (no service implementation, no server-only
+ * imports) so the API group definitions — and the derived client — can
+ * reference the tag without pulling Better Auth into the browser bundle. The
+ * implementation lives in `auth.middleware.live.ts`.
  */
 export class Authentication extends HttpApiMiddleware.Tag<Authentication>()(
   "Authentication",
@@ -19,7 +30,11 @@ export class Authentication extends HttpApiMiddleware.Tag<Authentication>()(
     failure: NotAuthenticated,
     provides: CurrentUser,
     security: {
-      cookie: HttpApiSecurity.apiKey({ in: "cookie", key: "access_token" }),
+      // Dev cookie name. (In production Better Auth prefixes `__Secure-`.)
+      cookie: HttpApiSecurity.apiKey({
+        in: "cookie",
+        key: "better-auth.session_token",
+      }),
     },
   },
 ) {}

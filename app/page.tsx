@@ -1,65 +1,134 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import {
+  ArrowRight,
+  KeyRound,
+  LayoutGrid,
+  MailCheck,
+  Workflow,
+} from "lucide-react";
+import { useSession } from "@/lib/auth/auth-client";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+const features = [
+  {
+    icon: Workflow,
+    title: "Effect HTTP API",
+    description:
+      "Typed endpoints, services, and repositories with an OpenAPI-derived client — end to end, no casts.",
+  },
+  {
+    icon: KeyRound,
+    title: "Better Auth",
+    description:
+      "Email & password sessions validated inside Effect middleware, with the OpenAPI plugin enabled.",
+  },
+  {
+    icon: MailCheck,
+    title: "Full email flows",
+    description:
+      "Email verification on sign-up and password reset, wired through a single pluggable send-email seam.",
+  },
+  {
+    icon: LayoutGrid,
+    title: "shadcn/ui + Tailwind v4",
+    description:
+      "Accessible components and design tokens, with the Inter typeface and a neutral, themeable palette.",
+  },
+];
 
 export default function Home() {
+  const { data, isPending } = useSession();
+  const user = data?.user;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="flex flex-1 flex-col items-center px-6 py-20 sm:py-28">
+      <section className="flex w-full max-w-2xl flex-col items-center text-center">
+        <span className="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+          Next.js 16 · Effect · Better Auth
+        </span>
+
+        <h1 className="mt-6 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+          A type-safe full-stack starter
+        </h1>
+
+        <p className="mt-4 max-w-xl text-lg text-pretty text-muted-foreground">
+          Effect on the server, Better Auth for sessions, and a generated,
+          fully-typed client on the front end. Clone it and start building.
+        </p>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          {isPending ? null : user ? (
+            <Link
+              href="/organizations"
+              className={cn(buttonVariants({ size: "lg" }), "gap-2")}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Go to your organizations
+              <ArrowRight className="size-4" />
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/register"
+                className={cn(buttonVariants({ size: "lg" }), "gap-2")}
+              >
+                Create an account
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/login"
+                className={buttonVariants({ variant: "outline", size: "lg" })}
+              >
+                Sign in
+              </Link>
+            </>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[9.875rem]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[9.875rem]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="mt-16 grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+        {features.map(({ icon: Icon, title, description }) => (
+          <Card key={title}>
+            <CardHeader>
+              <div className="mb-2 flex size-9 items-center justify-center rounded-lg border border-border bg-muted/40 text-foreground">
+                <Icon className="size-4.5" />
+              </div>
+              <CardTitle>{title}</CardTitle>
+              <CardDescription className="text-pretty">
+                {description}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        ))}
+      </section>
+
+      <section className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+        <a href="/api/docs" className="transition-colors hover:text-foreground">
+          API reference
+        </a>
+        <a
+          href="/api/auth/reference"
+          className="transition-colors hover:text-foreground"
+        >
+          Auth reference
+        </a>
+        <a
+          href="https://github.com/kitlangton/effect-better-auth-example"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-colors hover:text-foreground"
+        >
+          Effect × Better Auth example
+        </a>
+      </section>
+    </main>
   );
 }

@@ -21,10 +21,6 @@ export type Project =
     ? Json<R>
     : never;
 
-export type SessionUser = Json<
-  paths["/api/auth/me"]["get"]["responses"][200]
->["user"];
-
 // Request bodies
 export type CreateOrganizationInput = Json<
   NonNullable<paths["/api/organizations"]["post"]["requestBody"]>
@@ -37,10 +33,4 @@ export type CreateProjectInput = Json<
 >;
 export type UpdateProjectInput = Json<
   NonNullable<paths["/api/projects/{id}"]["put"]["requestBody"]>
->;
-export type LoginInput = Json<
-  NonNullable<paths["/api/auth/login"]["post"]["requestBody"]>
->;
-export type RegisterInput = Json<
-  NonNullable<paths["/api/auth/register"]["post"]["requestBody"]>
 >;

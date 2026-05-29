@@ -1,18 +1,34 @@
 import { Effect, Layer, Redacted } from "effect";
-import { Authentication } from "@/features/auth/http/auth.middleware";
-import { NotAuthenticated } from "@/features/auth/schema/auth.schema.model";
-import { Auth } from "@/features/auth/service/auth.service";
-
-/** Server-side implementation of the {@link Authentication} middleware. */
-export const AuthenticationLive = Layer.effect(
+import { auth } from "@/lib/auth/auth";
+import {
   Authentication,
-  Effect.gen(function* () {
-    const auth = yield* Auth;
-    return {
-      cookie: (token) =>
-        auth
-          .verifyToken(Redacted.value(token))
-          .pipe(Effect.mapError(() => new NotAuthenticated())),
-    };
+  NotAuthenticated,
+} from "@/features/auth/http/auth.middleware";
+
+/**
+ * Server-side implementation of the {@link Authentication} middleware. Rebuilds
+ * a cookie header from the session token and validates it against the same
+ * Better Auth instance that serves `/api/auth/*` via `auth.api.getSession`,
+ * providing the resolved user as `CurrentUser`.
+ */
+export const AuthenticationLive = Layer.succeed(
+  Authentication,
+  Authentication.of({
+    cookie: (token) =>
+      Effect.tryPromise({
+        try: () =>
+          auth.api.getSession({
+            headers: new Headers({
+              cookie: `better-auth.session_token=${Redacted.value(token)}`,
+            }),
+          }),
+        catch: () => new NotAuthenticated(),
+      }).pipe(
+        Effect.flatMap((session) =>
+          session?.user
+            ? Effect.succeed(session.user)
+            : Effect.fail(new NotAuthenticated()),
+        ),
+      ),
   }),
 );

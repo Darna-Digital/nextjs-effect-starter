@@ -16,7 +16,7 @@ import {
   parseProjectError,
 } from "@/features/project/presentation/hooks/use-projects"
 import { useOrganizations } from "@/features/organization/presentation/hooks/use-organizations"
-import { useCurrentUser } from "@/features/auth/presentation/hooks/use-auth"
+import { useCurrentUser } from "@/features/auth/presentation/hooks/use-current-user"
 
 export default function ProjectsPage() {
   const [filter, setFilter] = useState<ProjectsFilterState>(emptyProjectsFilter)
