@@ -3,7 +3,7 @@ import type { Project } from "@/features/project/schema/project.schema.model";
 import { ProjectRepository } from "@/features/project/repository/project.repository";
 import { createMemoryProjectRepository } from "@/features/project/repository/project.repository.memory";
 import { Projects } from "@/features/project/service/project.service";
-import { ProvisioningClientNoop } from "@/features/provisioning/client/provisioning.client";
+import { WorkflowsNoop } from "@/lib/effect/workflow/client";
 
 export const ProjectsMemory = ({
   seed = [],
@@ -12,7 +12,7 @@ export const ProjectsMemory = ({
     Layer.provide(
       Layer.mergeAll(
         Layer.effect(ProjectRepository, createMemoryProjectRepository(seed)),
-        ProvisioningClientNoop,
+        WorkflowsNoop,
       ),
     ),
   );
