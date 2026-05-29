@@ -1,10 +1,5 @@
 import { Schema as S } from "effect";
 
-/**
- * Effect `Schema`s used purely as client-side form validators (via
- * {@link ../../../lib/effect/form/effect-schema-resolver}). Keeping validation
- * in Effect `Schema` avoids introducing a second schema library.
- */
 export const Email = S.Trim.pipe(
   S.lowercased(),
   S.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {

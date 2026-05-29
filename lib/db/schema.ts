@@ -7,12 +7,6 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
-/**
- * Better Auth core tables. The Drizzle adapter maps each model field to the
- * table property of the same name (camelCase keys must match Better Auth's
- * field names exactly); SQL column names are free to be snake_case.
- * Field shapes mirror `@better-auth/core` `getAuthTables`.
- */
 export const user = mysqlTable("user", {
   id: varchar("id", { length: 36 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
