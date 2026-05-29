@@ -95,11 +95,6 @@ export function parseProjectError(error: unknown): ProjectFormError | null {
       return { field: null, message: "Project not found." };
     case "HttpApiDecodeError":
       return { field: null, message: "Please check the form fields." };
-    case "TooManyRequests":
-      return {
-        field: null,
-        message: `Too many requests — try again in ${(error as { retryAfter: number }).retryAfter}s.`,
-      };
     case "StorageError":
       return {
         field: null,

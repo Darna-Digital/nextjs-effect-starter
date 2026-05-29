@@ -111,11 +111,6 @@ export function parseOrganizationError(
         message:
           "Can't delete: this organization still has projects. Delete those first, then try again.",
       };
-    case "TooManyRequests":
-      return {
-        field: null,
-        message: `Too many requests — try again in ${(error as { retryAfter: number }).retryAfter}s.`,
-      };
     case "StorageError":
       return {
         field: null,
