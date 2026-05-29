@@ -9,8 +9,6 @@ export function ModeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // next-themes resolves the active theme only on the client, so render a
-  // placeholder until mounted to avoid a hydration mismatch on the value.
   useEffect(() => setMounted(true), []);
 
   return (

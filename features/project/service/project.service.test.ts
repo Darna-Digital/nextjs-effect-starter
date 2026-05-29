@@ -30,8 +30,6 @@ const bob: User = mkUser("user-bob", "bob@example.com");
 const orgA: Organization = { id: "org-a" as OrganizationId, name: "Acme" };
 const orgB: Organization = { id: "org-b" as OrganizationId, name: "Globex" };
 
-// Provides Projects + Organizations + the current user. The Authentication
-// middleware supplies CurrentUser in production; tests provide it directly.
 const env = (opts?: {
   projects?: readonly Project[];
   organizations?: readonly Organization[];

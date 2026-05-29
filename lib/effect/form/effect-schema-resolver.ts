@@ -1,13 +1,6 @@
 import { Result, Schema, SchemaIssue } from "effect";
 import type { FieldErrors, FieldValues, Resolver } from "react-hook-form";
 
-/**
- * Validates form values with an Effect `Schema` and adapts the result to a
- * react-hook-form `Resolver`. The form value type (`Output`) is supplied by the
- * caller — typically a generated OpenAPI type — while `schema` is used purely as
- * a runtime validator (its decoded type need not equal `Output`; the two are
- * structurally identical shapes, the schema just additionally brands/refines).
- */
 const formatIssues = SchemaIssue.makeFormatterStandardSchemaV1();
 
 export function effectSchemaResolver<Output extends FieldValues>(

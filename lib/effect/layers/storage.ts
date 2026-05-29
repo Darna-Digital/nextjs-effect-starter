@@ -6,9 +6,7 @@ export class StorageError extends S.TaggedErrorClass<StorageError>()(
   { httpApiStatus: 500 },
 ) {}
 
-/** Logs the underlying cause and produces a wire-safe StorageError. */
 export function storageError(cause: unknown): StorageError {
-  console.error("StorageError", cause);
   return new StorageError();
 }
 

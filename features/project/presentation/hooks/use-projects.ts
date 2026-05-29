@@ -16,8 +16,6 @@ export type ProjectsFilter = {
 };
 
 export function useProjects(filter: ProjectsFilter = {}) {
-  // Build the query object conditionally so optional keys are simply absent
-  // (rather than `key: undefined`, which `exactOptionalPropertyTypes` rejects).
   const query: { ownerId?: string; organizationId?: string } = {};
   if (filter.ownerId) query.ownerId = filter.ownerId;
   if (filter.organizationId) query.organizationId = filter.organizationId;

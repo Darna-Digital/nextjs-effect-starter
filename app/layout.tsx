@@ -6,8 +6,6 @@ import { AuthNav } from "@/features/auth/presentation/components/auth-nav";
 import { ModeToggle } from "@/components/mode-toggle";
 import "./globals.css";
 
-// Registered as `--font-sans` so the `font-sans` utility (mapped in globals.css)
-// resolves to Inter. `antialiased` + body `@apply font-sans` do the rest.
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],

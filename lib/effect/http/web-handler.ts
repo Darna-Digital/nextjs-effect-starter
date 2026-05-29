@@ -9,10 +9,6 @@ import { OrganizationsLive } from "@/features/organization/layer/organization.la
 import { ProjectHandlers } from "@/features/project/http/project.handlers";
 import { ProjectsLive } from "@/features/project/layer/project.layer.live";
 
-// Feature services. In v4, handler service requirements are request-scoped
-// (`Request<"Requires", _>`), so they're supplied via `HttpRouter.provideRequest`
-// rather than a plain `Layer.provide`. (CurrentUser is provided per-request by
-// the Authentication middleware.)
 const ServicesLive = Layer.mergeAll(OrganizationsLive, ProjectsLive);
 
 const ApiLive = HttpApiBuilder.layer(Api).pipe(
@@ -25,10 +21,5 @@ const ApiLive = HttpApiBuilder.layer(Api).pipe(
 
 const { handler } = HttpRouter.toWebHandler(ApiLive);
 
-/**
- * Single entry point for every `/api/*` request except `/api/auth/*` (served by
- * Better Auth's own route). The catch-all route delegates all HTTP methods here;
- * the Effect `HttpApi` router matches the method + path.
- */
 export const apiHandler = (request: Request): Promise<Response> =>
   handler(request);

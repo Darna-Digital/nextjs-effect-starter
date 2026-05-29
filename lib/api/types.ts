@@ -1,16 +1,9 @@
 import type { paths } from "./api-schema";
 
-/**
- * Frontend-facing types, derived from the generated OpenAPI schema. The browser
- * consumes these (not the Effect domain models) so there is a single, codegen'd
- * source of truth for request/response shapes — no brands, no casts.
- */
-
 type Json<T> = T extends { content: { "application/json": infer J } }
   ? J
   : never;
 
-// Entities (response bodies)
 export type Organization =
   paths["/api/organizations/{id}"]["get"]["responses"][200] extends infer R
     ? Json<R>
@@ -21,7 +14,6 @@ export type Project =
     ? Json<R>
     : never;
 
-// Request bodies
 export type CreateOrganizationInput = Json<
   NonNullable<paths["/api/organizations"]["post"]["requestBody"]>
 >;

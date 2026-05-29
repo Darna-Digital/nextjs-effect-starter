@@ -12,8 +12,6 @@ export const OrganizationSchema = S.Struct({
 });
 export type Organization = typeof OrganizationSchema.Type;
 
-// `httpApiStatus` is the annotation the HttpApi layer reads for the response
-// status (equivalent to `HttpApiSchema.status(code)`).
 export class OrganizationNotFound extends S.TaggedErrorClass<OrganizationNotFound>()(
   "OrganizationNotFound",
   { id: OrganizationId },

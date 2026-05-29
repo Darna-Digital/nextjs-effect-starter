@@ -1,7 +1,6 @@
 import { config } from "dotenv"
 import { defineConfig } from "drizzle-kit"
 
-// drizzle-kit runs outside of Next.js, so we load env ourselves.
 config({ path: ".env.local" })
 
 export default defineConfig({

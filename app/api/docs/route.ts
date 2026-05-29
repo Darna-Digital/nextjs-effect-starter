@@ -1,4 +1,3 @@
-// Scalar API reference, rendered from the live OpenAPI spec at /api/openapi.
 const html = `<!doctype html>
 <html>
   <head>

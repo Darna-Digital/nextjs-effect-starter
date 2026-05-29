@@ -6,11 +6,6 @@ import {
   NotAuthenticated,
 } from "@/features/auth/http/auth.middleware";
 
-/**
- * Resolves the Better Auth session from the cookie token, failing with
- * {@link NotAuthenticated} when absent/invalid. Traced as a child of the request
- * span so session resolution is visible end to end.
- */
 const resolveUser = (credential: Redacted.Redacted<string>) =>
   Effect.tryPromise({
     try: () =>
@@ -37,11 +32,6 @@ const resolveUser = (credential: Redacted.Redacted<string>) =>
     }),
   );
 
-/**
- * Server-side implementation of {@link Authentication}. The v4 security
- * middleware wraps the endpoint effect: it resolves the user, then runs the
- * endpoint with {@link CurrentUser} provided.
- */
 export const AuthenticationLive = Layer.succeed(Authentication, {
   cookie: (httpEffect, { credential }) =>
     resolveUser(credential).pipe(

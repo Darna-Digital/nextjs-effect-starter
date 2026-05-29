@@ -79,10 +79,6 @@ export function ProjectsFilterBar({
   );
 }
 
-/**
- * Translate the UI state into the query shape `useProjects` expects.
- * Keeping this close to the component so the page layer stays dumb.
- */
 export function toProjectsQuery(
   state: ProjectsFilterState,
   currentUserId: string | null,

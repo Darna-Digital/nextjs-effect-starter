@@ -3,15 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth/auth-client";
 
-/**
- * React Query bindings for Better Auth. Types are inferred from the Better Auth
- * client (`authClient`) — no codegen — so requests/responses stay in sync with
- * the server config. The reactive session lives in one query (`SESSION_KEY`)
- * that auth mutations invalidate, so the nav/pages update after sign-in/out.
- */
 export const SESSION_KEY = ["auth", "session"] as const;
 
-/** Shape of a Better Auth client error (`{ data, error }` envelopes). */
 export type AuthError = {
   code?: string;
   message?: string;
@@ -19,11 +12,6 @@ export type AuthError = {
   statusText?: string;
 };
 
-/**
- * Throw the Better Auth error envelope so React Query treats it as a failure.
- * The param type mirrors Better Auth's `{ data, error }` union loosely (its
- * `error.code` is optional), so any client method's result is accepted.
- */
 async function unwrap<T>(
   promise: Promise<{ data: T | null; error: unknown }>,
 ): Promise<T> {
