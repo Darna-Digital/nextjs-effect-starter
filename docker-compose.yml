@@ -11,6 +11,9 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      # Provisions the `workflow` schema + grants for the Workflow SDK world.
+      # Runs only on a fresh volume (see docker/mysql-init/01-workflow.sql).
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pdev"]
       interval: 5s

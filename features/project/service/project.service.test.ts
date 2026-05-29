@@ -64,18 +64,21 @@ describe("Projects.create", () => {
       });
       expect(created.name).toBe("Alpha");
       expect(created.organizationId).toBe(orgA.id);
+      expect(created.status).toBe("provisioning");
     }).pipe(Effect.provide(env({ organizations: [orgA] }))),
   );
 
-  it.effect("stamps the current user as the owner — identity from context", () =>
-    Effect.gen(function* () {
-      const projects = yield* Projects;
-      const created = yield* projects.create({
-        name: "Alpha",
-        organizationId: orgA.id,
-      });
-      expect(created.ownerId).toBe(bob.id);
-    }).pipe(Effect.provide(env({ organizations: [orgA], user: bob }))),
+  it.effect(
+    "stamps the current user as the owner — identity from context",
+    () =>
+      Effect.gen(function* () {
+        const projects = yield* Projects;
+        const created = yield* projects.create({
+          name: "Alpha",
+          organizationId: orgA.id,
+        });
+        expect(created.ownerId).toBe(bob.id);
+      }).pipe(Effect.provide(env({ organizations: [orgA], user: bob }))),
   );
 });
 
@@ -84,6 +87,7 @@ const aliceInA: Project = {
   name: "Alice at A",
   organizationId: orgA.id,
   ownerId: alice.id,
+  status: "active",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 const aliceInB: Project = {
@@ -91,6 +95,7 @@ const aliceInB: Project = {
   name: "Alice at B",
   organizationId: orgB.id,
   ownerId: alice.id,
+  status: "active",
   createdAt: "2026-01-02T00:00:00.000Z",
 };
 const bobInA: Project = {
@@ -98,6 +103,7 @@ const bobInA: Project = {
   name: "Bob at A",
   organizationId: orgA.id,
   ownerId: bob.id,
+  status: "active",
   createdAt: "2026-01-03T00:00:00.000Z",
 };
 

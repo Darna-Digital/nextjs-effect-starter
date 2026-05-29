@@ -6,6 +6,7 @@ import {
   ProjectRepository,
   type ProjectFilter,
 } from "@/features/project/repository/project.repository";
+import { ProvisioningClient } from "@/features/provisioning/client/provisioning.client";
 import type {
   CreateProject,
   UpdateProject,
@@ -13,6 +14,7 @@ import type {
 
 const make = Effect.gen(function* () {
   const repo = yield* ProjectRepository;
+  const provisioning = yield* ProvisioningClient;
 
   return {
     list: (filter: ProjectFilter = {}) =>
@@ -53,12 +55,19 @@ const make = Effect.gen(function* () {
           }),
         );
 
-        return yield* repo.create({
+        const created = yield* repo.create({
           id: crypto.randomUUID() as ProjectId,
           ownerId: user.id,
+          status: "provisioning",
           createdAt: new Date().toISOString(),
           ...input,
         });
+
+        // Kick off the durable provisioning workflow (best-effort — does not
+        // block or fail creation if the world is unavailable).
+        yield* provisioning.start(created.id);
+
+        return created;
       }).pipe(
         Effect.withSpan("Projects.create", {
           attributes: {

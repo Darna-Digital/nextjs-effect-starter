@@ -8,6 +8,13 @@
       "when": 1780066243398,
       "tag": "0000_dry_genesis",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1780080468373,
+      "tag": "0001_broad_captain_stacy",
+      "breakpoints": true
     }
   ]
 }

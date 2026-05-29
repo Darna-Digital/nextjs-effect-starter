@@ -1,0 +1,1 @@
+ALTER TABLE `projects` ADD `status` varchar(32) DEFAULT 'provisioning' NOT NULL;

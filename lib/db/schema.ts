@@ -73,6 +73,7 @@ export const projects = mysqlTable("projects", {
   ownerId: varchar("owner_id", { length: 36 })
     .notNull()
     .references(() => user.id),
+  status: varchar("status", { length: 32 }).notNull().default("provisioning"),
   createdAt: varchar("created_at", { length: 32 }).notNull(),
 });
 
